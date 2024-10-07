@@ -3,9 +3,6 @@ import os
 from includes.database_connection import DatabaseConnection
 from crud.ddl import DDL
 from crud.selection import Select
-#from crud.insert import Insert
-#from crud.update import Update
-#from crud.delete import Delete
 from includes.date_time import DateTimeProvider
 from includes.country import Country
 from includes.country_phone_code import Country
@@ -14,13 +11,128 @@ from datetime import datetime
 from includes.visualization.matplotlib_bar_graph import *
 from includes.visualization.matplotlib_pie_chart import *
 from includes.report_generation.spreadsheet_creator import *
+import json
+from decimal import Decimal
+from datetime import datetime
+
+from pathlib import Path
+import time
 
 
-# Create CRUD ops objects
-# insert_object = Insert("Umucyo insertion object 1")
+
+
+class SerializeDeserializeInJSON:
+
+    def __init__(self):
+        self.file_name = "serialized_files" + os.sep + "default.json"
+        self.data = {}
+
+    def set_serialization_file_name(self, file_name):
+        self.file_name = file_name
+
+    def set_serialization_data(self, data):
+        self.data = data
+
+    def set_data_format_encoder(self, data_format_encoder_class):
+        self.data_format_encoder_class = data_format_encoder_class
+
+    def set_data_format_decoder(self, data_format_decoder_class):
+        self.data_format_decoder_class = data_format_decoder_class
+
+    def serialize_in_json(self):
+        file_exists = self.check_file_exists()
+        if file_exists == False:
+            output_file = Path(self.file_name)
+            output_file.parent.mkdir(exist_ok=True, parents=True)
+        json_data = json.dumps(self.data, cls=self.data_format_encoder_class)
+        with open(self.file_name, 'x') as file_object:
+            json.dump(json_data, file_object)
+
+    def deserialize_from_json(self):
+        deserialized_data = {}
+        file_exists = self.check_file_exists()
+        if file_exists == True:
+            with open(self.file_name, mode='r') as file_object:
+                deserialized_data = json.loads(file_object.read(), cls=self.data_format_decoder_class) #
+        return deserialized_data
+
+    def check_file_exists(self):
+        check = os.path.isfile(self.file_name)
+        return check
+
+
+
+class TypeToJSONEncoder(json.JSONEncoder):
+
+    def default(self, data_object):
+        if isinstance(data_object, Decimal):
+            return str(data_object)
+        elif isinstance(data_object, datetime):
+            return data_object.isoformat()
+        else:
+            return super().default(data_object)
+
+
+
+
+
+
+class TypeToJSONDecoder(json.JSONDecoder):
+
+    date_time_map = {'date', 'datetime', 'day', 'hour', 'minutes', 'month', 'seconds', 'time', 'year'}
+    num_type_data = {'fraction', 'decimal', 'complex'}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(object_hook=self.object_hook,strict=False, *args, **kwargs)
+
+    def object_hook(self, obj):
+        if '_type' not in obj:
+            return obj
+        get_type = obj['_type']
+        if get_type in self.date_time_map: # check if _type is a datetime type
+            obj['value'] = self.date_deserialize(obj['value'], get_type)
+        elif get_type in self.num_type_data:  # Checks for fractions, decimal and complex
+            try:
+                obj['value'] = self.eva_data(obj['value'])
+            except ValueError as err:
+                print('object_hook ---> in num_type_data eval', err)
+        elif get_type == '_set':
+            obj['value'] = set(obj['value'])
+        return obj
+
+    @staticmethod
+    def eva_data(obj):
+        """Eval fractions, Decimals and complex num types"""
+        return eval(obj)
+
+    @staticmethod
+    def date_deserialize(obj, _type):
+
+        # TODO deserialize date with other format types, for instance 2020/11/17
+        if _type == 'date':
+            try:
+                if isinstance(obj, list):  # Date can be [2020, 11, 17] or '2020-11-17)
+                    obj = date(*[int(item) for item in obj])
+                else:
+                    obj = date(*[int(item) for item in obj.split('-')])
+            except ValueError as err:
+                print('data_serialize -- data', err)
+
+        elif _type == 'datetime':
+            try:
+                obj = datetime.strptime(str(obj), '%Y-%m-%d %H:%M:%S')
+            except ValueError as err:
+                try:
+                    obj = datetime.fromisoformat(str(obj))
+                except ValueError as err:
+                    print('data_serialize -- datatime', err)
+        return obj
+
+
+
+
+
 selection_object = Select("Umucyo selection object 1")
-#deletion_object = Delete("Umucyo deletion object 1")
-#update_object = Update("Umucyo update object 1")
 
 # Client continent
 client_continent = "Africa"
@@ -53,21 +165,56 @@ database_connection_object = database_connection_facility.get_database_connectio
 query_executor = database_connection_object
 
 # Number of fiscal years to compare for red flags dashboard
-number_of_fiscal_years = 4
+num_fiscal_year_check = 1
+
+# A serialization cache creator for performance optimization
+serialization_deserialization_file_dictionary = {}
+serialization_deserialization_object = SerializeDeserializeInJSON()
+directory_dictionary = {
+                          "data": "data" + os.sep + "cached_serialized_data" + os.sep,
+                          "calculations_data": "data" + os.sep + "cached_serialized_calculations_data" + os.sep
+                       }
+
+
+serialization_deserialization_object.set_data_format_encoder(TypeToJSONEncoder)
+serialization_deserialization_object.set_data_format_decoder(TypeToJSONDecoder)
 
 # Get all available fiscal years.
-fiscal_year_dictionary = get_fiscal_years(selection_object, query_executor) # ops: select distinct fiscal years from the planning table and all the other tables in which the fiscal year field appears
+# Operation: select distinct fiscal years from the planning table or any other tables in which the fiscal year field appears as ext_fiscal_year
+fiscal_year_dictionary = get_fiscal_years(selection_object, query_executor)
 print("Retrieving Fiscal year list\n")
+new_fiscal_year_dictionary = {}
+count = 0
 for fiscal_year_key in fiscal_year_dictionary:
+    if count < num_fiscal_year_check:
+        new_fiscal_year_dictionary[fiscal_year_key] = fiscal_year_dictionary[fiscal_year_key]
+        count += 1
+    else:
+        break
     print(fiscal_year_key)
+fiscal_year_dictionary = new_fiscal_year_dictionary
 print("\n")
 
+
 # Get a specific fiscal year procuring entities
+# Operation: you actually just select all procuring entities and assume that they appear every fiscal year in this case
+# Calculated data at rest files:
 fiscal_year_procuring_entity_dictionary = {}
-procuring_entity_dictionary = procurement_actor(selection_object, query_executor, "{buyer}")
+procuring_entity_dictionary = get_procurement_actor(selection_object, query_executor, "{buyer}")
 for fiscal_year_id in fiscal_year_dictionary:
-    fiscal_year_procuring_entity_dictionary[fiscal_year_id] = procuring_entity_dictionary
-    # Ops: you actually just select all procuring entities and assume that they appear every fiscal year in this case
+
+    data_cache_file_name = directory_dictionary["data"] + "procuring_entities" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "procuring_entities" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_procuring_entity_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        specific_procuring_entities = get_procurement_actor(selection_object, query_executor, "{buyer}")
+        fiscal_year_procuring_entity_dictionary[fiscal_year_id] = specific_procuring_entities
+        if len(specific_procuring_entities) > 0:
+            serialization_deserialization_object.set_serialization_data(specific_procuring_entities)
+            serialization_deserialization_object.serialize_in_json()
 
 print()
 print("\nProcuring entity list\n")
@@ -84,18 +231,44 @@ for fiscal_year_id in fiscal_year_dictionary:
 
 
 # Get a specific fiscal year supplying entities
+# Operation: check them by whether they have atleast a single bid every fiscal year to qualify them to appear in this dictionary's entries
+#
 fiscal_year_supplying_entity_dictionary = {}
-supplying_entity_dictionary = procurement_actor(selection_object, query_executor, "{supplier}")
-for fiscal_year_id in fiscal_year_dictionary:
-    fiscal_year_supplying_entity_dictionary[fiscal_year_id] = supplying_entity_dictionary
-    #print()
-    # ops: check them by whether they have atleast a single bid every fiscal year to qualify them to appear in this dictionary's entries
+
+for fiscal_year_key in fiscal_year_dictionary:
+
+    data_cache_file_name = directory_dictionary["data"] + "suppliers" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "suppliers" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_supplying_entity_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+        continue
+
+    supplying_entity_dictionary = get_fiscal_year_supplying_entity(selection_object, query_executor, "{supplier}", fiscal_year_id)
+    new_supplying_entity_dictionary = {}
+    for supplying_entity_id in supplying_entity_dictionary:
+        ext_tin = supplying_entity_dictionary[supplying_entity_id]['ext_tin']
+        new_supplying_entity_dictionary[ext_tin] = supplying_entity_dictionary[supplying_entity_id]
+    supplying_entity_dictionary = new_supplying_entity_dictionary
+    fiscal_year_supplying_entity_dictionary[fiscal_year_id] = new_supplying_entity_dictionary
+
+    if len(new_supplying_entity_dictionary) > 0:
+        serialization_deserialization_object.set_serialization_data(new_supplying_entity_dictionary)
+        serialization_deserialization_object.serialize_in_json()
+
+
 
 print()
 print("\nSupplying entity list\n")
 count = 0
+
 for fiscal_year_id in fiscal_year_dictionary:
-    for supplying_entity_id in fiscal_year_supplying_entity_dictionary[fiscal_year_id]:
+    if fiscal_year_id not in fiscal_year_supplying_entity_dictionary:
+        continue
+    specific_supplying_entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id]
+    for supplying_entity_id in specific_supplying_entity_dictionary:
+        #print(supplying_entity_id)
         print(fiscal_year_supplying_entity_dictionary[fiscal_year_id][supplying_entity_id]['name'])
         if count == 14:
             break;
@@ -108,27 +281,47 @@ for fiscal_year_id in fiscal_year_dictionary:
 # (important for red flag 1)
 # Get a specific fiscal year's procuring entities' procuring plans, this is sufficient to calculate red flag 1
 # The dictionary on the next line is sufficient to handle the information needed to calculate red flag 1 and consequently visualize it
+# The legacy id is used to reference the procuring enttty id in the planning table, so use use it to key a particular entity's plans. In the planning rable, it's called ext_pe_code
+start_time = time.time()
 fiscal_year_procuring_entity_plan_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id] = {}
     procuring_entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id]
-    print(fiscal_year_id + ": " + str(len(fiscal_year_procuring_entity_dictionary[fiscal_year_id])))
-    for procuring_entity_id in procuring_entity_dictionary:
-        legacy_id = procuring_entity_dictionary[procuring_entity_id]['legacy_id']
-        party_id = legacy_id
-        procuring_entity_id = legacy_id
-        # The legacy id is used to reference the procuring enttty id in the planning table, so use use it to key a particular entity's plans. In the planning rable, it's called ext_pe_code
-        fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id][procuring_entity_id] = specific_party_fiscal_year_plans(selection_object, query_executor, fiscal_year_id, party_id)
+
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "plans" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "plans" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        for procuring_entity_id in procuring_entity_dictionary:
+            legacy_id = procuring_entity_dictionary[procuring_entity_id]['legacy_id']
+            party_id = legacy_id
+            procuring_entity_id = legacy_id
+            specific_fiscal_year_procuring_entity_plan = get_specific_party_fiscal_year_plans(selection_object, query_executor, fiscal_year_id, party_id)
+            fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id][procuring_entity_id] = specific_fiscal_year_procuring_entity_plan
+
+        if len(fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id])
+            serialization_deserialization_object.serialize_in_json()
+
+
+
+end_time = time.time()
 
 count = 0
 print()
+print("Time taken:" + str(end_time - start_time))
 print("\n%-70s  %-s\n" % ("Procuring actor legacy id", "Plan"))
 for fiscal_year_id in fiscal_year_dictionary:
-    procuring_entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id]
-    for procuring_entity_id in procuring_entity_dictionary:
-        legacy_id = procuring_entity_dictionary[procuring_entity_id]['legacy_id']
+    specific_procuring_entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id]
+    for procuring_entity_id in specific_procuring_entity_dictionary:
+        legacy_id = specific_procuring_entity_dictionary[procuring_entity_id]['legacy_id']
         plan_dictionary = fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id][legacy_id]
         for plan_id in plan_dictionary:
+            if isinstance(plan_dictionary[plan_id], str):
+                plan_dictionary[plan_id] = json.loads(plan_dictionary[plan_id])
             ext_pe_code = plan_dictionary[plan_id]['ext_pe_code']
             plan_count = len(plan_dictionary)
             print(" %-70s %-3s" % (ext_pe_code, str(plan_count)))
@@ -145,51 +338,107 @@ for fiscal_year_id in fiscal_year_dictionary:
 fiscal_year_supplying_entity_contact_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_supplying_entity_contact_dictionary[fiscal_year_id] = {}
+    if fiscal_year_id not in fiscal_year_supplying_entity_dictionary:
+        continue
     specific_fiscal_year_supplying_entities = fiscal_year_supplying_entity_dictionary[fiscal_year_id]
     for supplying_entity_id in specific_fiscal_year_supplying_entities:
-        fiscal_year_supplying_entity_contact_dictionary[fiscal_year_id][supplying_entity_id] = {}
+        email = specific_fiscal_year_supplying_entities[supplying_entity_id]['contact_point_email']
+        phone = specific_fiscal_year_supplying_entities[supplying_entity_id]['contact_point_telephone']
+        if phone is None:
+            phone = ""
+        if email is None:
+            email = ""
+        contact_dictionary = {}
+        contact_dictionary['0'] = {}
+        contact_dictionary['0']['name'] = 'email'
+        contact_dictionary['0']['value'] = email
+        contact_dictionary['1'] = {}
+        contact_dictionary['1']['name'] = 'phone'
+        contact_dictionary['1']['value'] = phone
+        fiscal_year_supplying_entity_contact_dictionary[fiscal_year_id][supplying_entity_id] = contact_dictionary
 
 
-
-# Get a specific fiscal year tenders, for the last y number of years
-# Get a specific tender's bids
-fiscal_year_tender_dictionary = {}
-tender_bid_dictionary = {}
-for fiscal_year_id in fiscal_year_dictionary:
-    fiscal_year_tender_dictionary[fiscal_year_id] = {}
-    # This has sufficient information to calculate red flag number two
-    for tender_id in fiscal_year_tender_dictionary[fiscal_year_id]:
-        tender_bid_dictionary[tender_id] = {}
-
-
-tender_bid_dictionary = {}
-for procuring_entity_id in procuring_entity_tender_dictionary:
-    for tender_id in procuring_entity_tender_dictionary[procuring_entity_id]:
-        tender_bid_dictionary[tender_id] = {}
-
-
-# Get a specific fiscal year bids
-fiscal_year_bid_dictionary = {}
-for fiscal_year_id in fiscal_year_dictionary:
-    fiscal_year_bid_dictionary[fiscal_year_id] = {}
-
+print("Able to get the supplying entity contacts in:" + str(len(fiscal_year_supplying_entity_contact_dictionary)))
 
 
 # Get a specific fiscal year tenders' bids
 # This has sufficient information to calculate red flag number 2, 6, 8 (in conjunction with awards) and all such variants
+# Get a specific fiscal year tenders, for the last y number of years
+# Get a specific tender's bids
 fiscal_year_tender_bid_dictionary = {}
-for fiscal_year_id in fiscal_year_dictionary:
-    fiscal_year_tender_bid_dictionary[fiscal_year_id] = {}
-    for tender_id in fiscal_year_tender_dictionary[fiscal_year_id]:
-        specific_tender_bid_dictionary = {}
-        new_specific_tender_bid_dictionary = {}
-        for bid_id in specific_tender_bid_dictionary:
-            if bid_id in fiscal_year_bid_dictionary[fiscal_year_id]:
-                new_specific_tender_bid_dictionary[bid] = fiscal_year_bid_dictionary[fiscal_year_id][bid_id]
-        fiscal_year_tender_bid_dictionary[fiscal_year_id][tender_id] = new_specific_tender_bid_dictionary
+fiscal_year_tender_dictionary = {}
+fiscal_year_bid_dictionary = {}
 
+start_time_1 = time.time()
+for fiscal_year_id in fiscal_year_dictionary:
+
+    fiscal_year_tender_dictionary[fiscal_year_id] = {}
+
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "tenders" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "tenders" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        #print("Deserialized")
+        fiscal_year_tender_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        specific_fiscal_year_tenders = get_specific_fiscal_year_tenders(selection_object, query_executor, fiscal_year_id)
+        fiscal_year_tender_dictionary[fiscal_year_id] = specific_fiscal_year_tenders
+        if len(specific_fiscal_year_tenders) > 0:
+            #print("Tender count: " + str(len(specific_fiscal_year_tenders)))
+            serialization_deserialization_object.set_serialization_data(specific_fiscal_year_tenders)
+            serialization_deserialization_object.serialize_in_json()
+
+end_time_1 = time.time()
+print("Start time 1: " + str(end_time_1 - start_time_1))
+
+start_time_2 = time.time()
+for fiscal_year_id in fiscal_year_dictionary:
+
+    fiscal_year_tender_bid_dictionary[fiscal_year_id] = {}
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "tender_bids" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "bids" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+         fiscal_year_tender_bid_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        for tender_id in fiscal_year_tender_dictionary[fiscal_year_id]:
+            fiscal_year_tender_bid_dictionary[fiscal_year_id][tender_id] = get_tender_bidders(selection_object, query_executor, tender_id)
+        if len(fiscal_year_tender_bid_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(fiscal_year_tender_bid_dictionary[fiscal_year_id])
+            serialization_deserialization_object.serialize_in_json()
+
+end_time_2 = time.time()
+print("Start time 2: " + str(end_time_2 - start_time_2))
+
+
+start_time_3 = time.time()
+for fiscal_year_id in fiscal_year_dictionary:
+
+    fiscal_year_bid_dictionary[fiscal_year_id] = {}
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "bids" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "bids" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_bid_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        specific_fiscal_year_bid_dictionary = get_specific_fiscal_year_bidder(selection_object, query_executor, fiscal_year_id)
+        fiscal_year_bid_dictionary[fiscal_year_id] = specific_fiscal_year_bid_dictionary
+        if len(fiscal_year_bid_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(specific_fiscal_year_bid_dictionary)
+            serialization_deserialization_object.serialize_in_json()
+
+end_time_3 = time.time()
+print("Start time 3: " + str(end_time_3 - start_time_3))
+
+print("Able to get the fiscal year tenders in:" + str(len(fiscal_year_tender_dictionary)))
+print("Able to get the tender bidders in:" + str(len(fiscal_year_bid_dictionary)))
+
+
+# (important for red flag 3)
 # Get a specific fiscal year tender fee payments
-# This is intended to help in the calculation of the third red flag
 fiscal_year_tender_payment_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_tender_payment_dictionary[fiscal_year_id] = {}
@@ -198,56 +447,88 @@ for fiscal_year_id in fiscal_year_dictionary:
         fiscal_year_tender_payment_dictionary[fiscal_year_id][tender_id] = specific_tender_payment
 
 
-# Get a specific procuring entity's tenders for a given fiscal year
-procuring_entity_tender_dictionary = {}
-for procuring_entity_id in procuring_entity_dictionary:
-    procuring_entity_tender_dictionary[procuring_entity_id] = {}
-
-
+# (Important for red flag 8 and 10)
 # Get a specific fiscal year supplying entitys' bids
 fiscal_year_supplying_entity_bid_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_supplying_entity_bid_dictionary[fiscal_year_id] = {}
+    if fiscal_year_id not in fiscal_year_supplying_entity_dictionary:
+        continue
     specific_fiscal_year_supplying_entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id] # Maybe use all the supplying entities if the year mappings are not sufficient
 
-    for supplying_entity_id in specific_fiscal_year_supplying_entity_dictionary: # Maybe loop through all the supplying entities if the year mappings are not sufficient/available
-        specific_supplying_entity_bid_dictionary = get_specific_supplying_entity_bids(selection_object, query_executor, supplying_entity_id)
-        new_specific_supplying_entity_bid_dictionary = {}
-        for bid_id in specific_supplying_entity_bid_dictionary:
-            if bid_id in fiscal_year_bid_dictionary[fiscal_year_id]:
-                new_specific_supplying_entity_bid_dictionary[bid_id] = fiscal_year_bid_dictionary[fiscal_year_id][bid_id]
-        fiscal_year_supplying_entity_bid_dictionary[fiscal_year_id][supplying_entity_id] = new_specific_supplying_entity_bid_dictionary
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "supplying_entity_bids" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "bids" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_supplying_entity_bid_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        for supplying_entity_id in specific_fiscal_year_supplying_entity_dictionary:
+            # supplying_entity_id = ext_tin
+            specific_supplying_entity_bid_dictionary = get_specific_fiscal_year_supplying_entity_bids(selection_object, query_executor, fiscal_year_id, supplying_entity_id)
+            fiscal_year_supplying_entity_bid_dictionary[fiscal_year_id][supplying_entity_id] = specific_supplying_entity_bid_dictionary
+        if len(fiscal_year_supplying_entity_bid_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(fiscal_year_supplying_entity_bid_dictionary[fiscal_year_id])
+            serialization_deserialization_object.serialize_in_json()
+
+
 
 
 # Get a specific fiscal year awards
 fiscal_year_award_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
-    fiscal_year_award_dictionary[fiscal_year_id] = get_specific_fiscal_year_awards(selection_object, query_executor, fiscal_year_id)
+
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "awards_all" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "awards" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_award_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        fiscal_year_award_dictionary[fiscal_year_id] = get_specific_fiscal_year_awards(selection_object, query_executor, fiscal_year_id)
+        if len(fiscal_year_award_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(fiscal_year_award_dictionary[fiscal_year_id])
+            serialization_deserialization_object.serialize_in_json()
 
 # Get a fiscal year supplying entity awards
 fiscal_year_supplying_entity_award_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_supplying_entity_award_dictionary[fiscal_year_id] = {}
-    for supplying_entity_id in fiscal_year_supplying_entity_dictionary[fiscal_year_id]:
-        specific_supplying_entity_awards = get_specific_supplying_entity_awards(selection_object, query_executor, supplying_entity_id)
-        new_specific_supplying_entity_awards = {}
-        for award_id in specific_supplying_entity_awards:
-            if award_id in fiscal_year_award_dictionary[fiscal_year_id]:
-                new_specific_supplying_entity_awards[award_id] = fiscal_year_award_dictionary[fiscal_year_id][award_id]
-        fiscal_year_supplying_entity_award_dictionary[fiscal_year_id][supplying_entity_id] = new_specific_supplying_entity_awards
+    if fiscal_year_id not in fiscal_year_supplying_entity_dictionary:
+        continue
+
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "awards_supplying_entity" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "awards" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_supplying_entity_award_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        for supplying_entity_id in fiscal_year_supplying_entity_dictionary[fiscal_year_id]:
+            specific_supplying_entity_awards = get_fiscal_year_supplying_entity_awards(selection_object, query_executor, fiscal_year_id, supplying_entity_id)
+            fiscal_year_supplying_entity_award_dictionary[fiscal_year_id][supplying_entity_id] = specific_supplying_entity_awards
+        if len(fiscal_year_award_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(fiscal_year_supplying_entity_award_dictionary[fiscal_year_id])
+            serialization_deserialization_object.serialize_in_json()
 
 
 # Get fiscal year procuring entity award
 fiscal_year_procuring_entity_award_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_procuring_entity_award_dictionary[fiscal_year_id] = {}
-    for procuring_entity_id in fiscal_year_procuring_entity_dictionary[fiscal_year_id]:
-        specific_procuring_entity_awards = get_specific_procuring_entity_awards(selection_object, query_executor, procuring_entity_id)
-        new_specific_procuring_entity_awards = {}
-        for award_id in specific_procuring_entity_awards:
-            if award_id in fiscal_year_award_dictionary[fiscal_year_id]:
-                new_specific_procuring_entity_awards[award_id] = fiscal_year_award_dictionary[fiscal_year_id][award_id]
-        fiscal_year_procuring_entity_award_dictionary[fiscal_year_id][procuring_entity_id] = new_specific_procuring_entity_awards
+
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "awards_procuring_entity" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "awards" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_procuring_entity_award_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        for procuring_entity_id in fiscal_year_procuring_entity_dictionary[fiscal_year_id]:
+            fiscal_year_procuring_entity_award_dictionary[fiscal_year_id][procuring_entity_id] = get_fiscal_year_procuring_entity_awards(selection_object, query_executor, fiscal_year_id, procuring_entity_id)
+        if len(fiscal_year_award_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(fiscal_year_procuring_entity_award_dictionary[fiscal_year_id])
+            serialization_deserialization_object.serialize_in_json()
 
 
 # Get the fiscal year procuring entity supplying entity awards, awards given by procuring entities to given certain supplying entities in the selected fiscal years
@@ -277,35 +558,46 @@ for fiscal_year_id in fiscal_year_procuring_entity_award_dictionary:
 
 
 
+# No information on appeals and payments is available yet
 # Get the F fiscal year award appeals, this should help in calculating red flag 5
 fiscal_year_award_appeal_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
+    fiscal_year_award_appeal_dictionary[fiscal_year_id] = {}
     specific_fiscal_year_awards = fiscal_year_award_dictionary[fiscal_year_id]
     for award_id in specific_fiscal_year_awards:
-        specific_award_appeals = get_specific_award_appeals(selection_object, query_executor, award_id)
+        specific_award_appeals = {}#get_specific_award_appeals(selection_object, query_executor, award_id) # no data is available yet
         if len(specific_award_appeals) == 0: # one can as well use both of them, instead of one
             specific_award_tenders = get_specific_award_tenders(selection_object, query_executor, award_id)
             appeal_dictionary = {}
             for tender_id in specific_award_tenders:
-                specific_tender_appeals = get_specific_tender_appeals(selection_object, query_executor, tender_id)
+                specific_tender_appeals = {} # get_specific_tender_appeals(selection_object, query_executor, tender_id)
                 for appeal_id in specific_tender_appeals:
                     appeal_dictionary[appeal_id] = specific_tender_appeals[appeal_id]
-            fiscal_year_award_appeal_dictionary[award_id] = appeal_dictionary
+            fiscal_year_award_appeal_dictionary[fiscal_year_id][award_id] = appeal_dictionary
         else:
-            fiscal_year_award_appeal_dictionary[award_id] = specific_award_appeals
+            fiscal_year_award_appeal_dictionary[fiscal_year_id][award_id] = specific_award_appeals
 
 
 # Get a specific fiscal year tender award(s)
 fiscal_year_tender_award_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_tender_award_dictionary[fiscal_year_id] = {}
-    for tender_id in fiscal_year_tender_dictionary[fiscal_year_id]:
-        specific_tender_awards = get_specific_tender_awards(selection_object, query_executor, tender_id)
-        new_specific_tender_awards = {}
-        for award_id in specific_tender_awards:
-            if award_id in fiscal_year_award_dictionary[fiscal_year_id]:
-                new_specific_tender_awards[award_id] = fiscal_year_award_dictionary[fiscal_year_id][award_id]
-        fiscal_year_tender_award_dictionary[fiscal_year_id][tender_id] = new_specific_tender_awards
+
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "tender_awards" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "tender_awards" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_tender_award_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+    else:
+        for tender_id in fiscal_year_tender_dictionary[fiscal_year_id]:
+            tender_reference_number = fiscal_year_tender_dictionary[fiscal_year_id][tender_id]['legacy_id']
+            specific_tender_awards = get_specific_tender_awards(selection_object, query_executor, tender_reference_number)
+            fiscal_year_tender_award_dictionary[fiscal_year_id][tender_id] = specific_tender_awards
+        if len(fiscal_year_tender_award_dictionary[fiscal_year_id]) > 0:
+            serialization_deserialization_object.set_serialization_data(fiscal_year_tender_award_dictionary[fiscal_year_id])
+            serialization_deserialization_object.serialize_in_json()
+
 
 
 
@@ -332,12 +624,13 @@ for fiscal_year_id in fiscal_year_dictionary:
 
 red_flag_1_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
-    red_flag_1_dictionary[fiscal_year_id] = {"without_a_paln":0, "with_a_plan":0, "without_a_plan_set":set(), "with_a_plan_set":set()}
+    red_flag_1_dictionary[fiscal_year_id] = {"without_a_plan":0, "with_a_plan":0, "without_a_plan_set":set(), "with_a_plan_set":set()}
     specific_fiscal_year_procuring_entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id]
     for procuring_entity_id in specific_fiscal_year_procuring_entity_dictionary:
-        if len(fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id][procuring_entity_id]) == 0:
-            red_flag_1_dictionary[fiscal_year_id]["without_a_paln"] += 1
-            red_flag_1_dictionary[fiscal_year_id]["without_a_plan_set"].add(procuring_entity_id)
+        legacy_id = specific_fiscal_year_procuring_entity_dictionary[procuring_entity_id]['legacy_id']
+        if len(fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id][legacy_id]) == 0:
+            red_flag_1_dictionary[fiscal_year_id]["without_a_plan"] += 1
+            red_flag_1_dictionary[fiscal_year_id]["without_a_plan_set"].add(legacy_id)
         else:
             red_flag_1_dictionary[fiscal_year_id]["with_a_plan"] += 1
             #red_flag_1_dictionary[fiscal_year_id]["with_a_plan_set"].add(procuring_entity_id) # not of interest for now
@@ -412,10 +705,10 @@ for fiscal_year_id in fiscal_year_dictionary:
 
             if len(email_address) > 0 and email_address.strip() == another_email_address.strip():
                 red_flag_2_dictionary[fiscal_year_id]["same_email"] += 1
-                red_flag_2_dictionary[fiscal_year_id]["same_email"].add(zip(supplying_entity_id, another_supplying_entity_id)) # set of tuples
+                red_flag_2_dictionary[fiscal_year_id]["same_email_pair_set"].add(zip(supplying_entity_id, another_supplying_entity_id)) # set of tuples
             if len(phone) > 0 and phone.strip() == another_phone.strip():
                 red_flag_2_dictionary[fiscal_year_id]["same_phone"] += 1
-                red_flag_2_dictionary[fiscal_year_id]["same_phone"].add(zip(supplying_entity_id, another_supplying_entity_id))
+                red_flag_2_dictionary[fiscal_year_id]["same_phone_pair_set"].add(zip(supplying_entity_id, another_supplying_entity_id))
 
 
 
@@ -480,7 +773,7 @@ for fiscal_year_id in fiscal_year_dictionary:
 #             Get the supplier bids
 #             For each and every supplier, get their awards and count them, if successful awards are equal to bids (sound the alarm)
 
-red_flag_10_set = set()
+red_flag_8_set = set()
 supplying_entity_exclusion_set = set()
 for fiscal_year_id in fiscal_year_dictionary:
     specific_fiscal_year_supplying_entity_bids = fiscal_year_supplying_entity_bid_dictionary[fiscal_year_id]
@@ -489,12 +782,12 @@ for fiscal_year_id in fiscal_year_dictionary:
         bid_count = len(specific_fiscal_year_supplying_entity_bids[supplying_entity_id])
         award_count = len(specific_fiscal_year_supplying_entity_awards[supplying_entity_id])
         if bid_count == award_count and bid_count == 1:
-            if supplying_entity_id in red_flag_10_set:
-                red_flag_10_set.pop(supplying_entity_id)
+            if supplying_entity_id in red_flag_8_set:
+                red_flag_8_set.pop(supplying_entity_id)
                 supplying_entity_exclusion_set.add(supplying_entity_id)
             else:
                 if supplying_entity_id not in supplying_entity_exclusion_set:
-                    red_flag_10_set.add(supplying_entity_id)
+                    red_flag_8_set.add(supplying_entity_id)
 
 
 
