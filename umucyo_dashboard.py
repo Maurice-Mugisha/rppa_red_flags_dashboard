@@ -7,126 +7,16 @@ from includes.date_time import DateTimeProvider
 from includes.country import Country
 from includes.country_phone_code import Country
 from includes.business_logic_functions import *
+from includes.serialization import *
 from datetime import datetime
 from includes.visualization.matplotlib_bar_graph import *
 from includes.visualization.matplotlib_pie_chart import *
 from includes.report_generation.spreadsheet_creator import *
 import json
-from decimal import Decimal
-from datetime import datetime
 
-from pathlib import Path
 import time
+from datetime import date
 
-
-
-
-class SerializeDeserializeInJSON:
-
-    def __init__(self):
-        self.file_name = "serialized_files" + os.sep + "default.json"
-        self.data = {}
-
-    def set_serialization_file_name(self, file_name):
-        self.file_name = file_name
-
-    def set_serialization_data(self, data):
-        self.data = data
-
-    def set_data_format_encoder(self, data_format_encoder_class):
-        self.data_format_encoder_class = data_format_encoder_class
-
-    def set_data_format_decoder(self, data_format_decoder_class):
-        self.data_format_decoder_class = data_format_decoder_class
-
-    def serialize_in_json(self):
-        file_exists = self.check_file_exists()
-        if file_exists == False:
-            output_file = Path(self.file_name)
-            output_file.parent.mkdir(exist_ok=True, parents=True)
-        json_data = json.dumps(self.data, cls=self.data_format_encoder_class)
-        with open(self.file_name, 'x') as file_object:
-            json.dump(json_data, file_object)
-
-    def deserialize_from_json(self):
-        deserialized_data = {}
-        file_exists = self.check_file_exists()
-        if file_exists == True:
-            with open(self.file_name, mode='r') as file_object:
-                deserialized_data = json.loads(file_object.read(), cls=self.data_format_decoder_class) #
-        return deserialized_data
-
-    def check_file_exists(self):
-        check = os.path.isfile(self.file_name)
-        return check
-
-
-
-class TypeToJSONEncoder(json.JSONEncoder):
-
-    def default(self, data_object):
-        if isinstance(data_object, Decimal):
-            return str(data_object)
-        elif isinstance(data_object, datetime):
-            return data_object.isoformat()
-        else:
-            return super().default(data_object)
-
-
-
-
-
-
-class TypeToJSONDecoder(json.JSONDecoder):
-
-    date_time_map = {'date', 'datetime', 'day', 'hour', 'minutes', 'month', 'seconds', 'time', 'year'}
-    num_type_data = {'fraction', 'decimal', 'complex'}
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(object_hook=self.object_hook,strict=False, *args, **kwargs)
-
-    def object_hook(self, obj):
-        if '_type' not in obj:
-            return obj
-        get_type = obj['_type']
-        if get_type in self.date_time_map: # check if _type is a datetime type
-            obj['value'] = self.date_deserialize(obj['value'], get_type)
-        elif get_type in self.num_type_data:  # Checks for fractions, decimal and complex
-            try:
-                obj['value'] = self.eva_data(obj['value'])
-            except ValueError as err:
-                print('object_hook ---> in num_type_data eval', err)
-        elif get_type == '_set':
-            obj['value'] = set(obj['value'])
-        return obj
-
-    @staticmethod
-    def eva_data(obj):
-        """Eval fractions, Decimals and complex num types"""
-        return eval(obj)
-
-    @staticmethod
-    def date_deserialize(obj, _type):
-
-        # TODO deserialize date with other format types, for instance 2020/11/17
-        if _type == 'date':
-            try:
-                if isinstance(obj, list):  # Date can be [2020, 11, 17] or '2020-11-17)
-                    obj = date(*[int(item) for item in obj])
-                else:
-                    obj = date(*[int(item) for item in obj.split('-')])
-            except ValueError as err:
-                print('data_serialize -- data', err)
-
-        elif _type == 'datetime':
-            try:
-                obj = datetime.strptime(str(obj), '%Y-%m-%d %H:%M:%S')
-            except ValueError as err:
-                try:
-                    obj = datetime.fromisoformat(str(obj))
-                except ValueError as err:
-                    print('data_serialize -- datatime', err)
-        return obj
 
 
 
@@ -189,8 +79,8 @@ for fiscal_year_key in fiscal_year_dictionary:
     if count < num_fiscal_year_check:
         new_fiscal_year_dictionary[fiscal_year_key] = fiscal_year_dictionary[fiscal_year_key]
         count += 1
-    else:
-        break
+    #else:
+    #    break
     print(fiscal_year_key)
 fiscal_year_dictionary = new_fiscal_year_dictionary
 print("\n")
@@ -200,7 +90,7 @@ print("\n")
 # Operation: you actually just select all procuring entities and assume that they appear every fiscal year in this case
 # Calculated data at rest files:
 fiscal_year_procuring_entity_dictionary = {}
-procuring_entity_dictionary = get_procurement_actor(selection_object, query_executor, "{buyer}")
+#procuring_entity_dictionary = get_procurement_actor(selection_object, query_executor, "{buyer}")
 for fiscal_year_id in fiscal_year_dictionary:
 
     data_cache_file_name = directory_dictionary["data"] + "procuring_entities" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "procuring_entities" + ".json"
@@ -532,6 +422,8 @@ for fiscal_year_id in fiscal_year_dictionary:
 
 
 # Get the fiscal year procuring entity supplying entity awards, awards given by procuring entities to given certain supplying entities in the selected fiscal years
+# Since the only end goal for this code block/algorithm is to calculate red flag 9, we will only display serialize the calculated red flag result and depend upon it
+# to avoid repeating the same time intensive calculation
 configuration_number_of_direct_contracts = 2;
 cndc = configuration_number_of_direct_contracts
 red_flag_9_dictionary = {}
@@ -539,6 +431,16 @@ fiscal_year_procuring_entity_supplying_entity_award_dictionary = {}
 for fiscal_year_id in fiscal_year_procuring_entity_award_dictionary:
     fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id] = {}
     red_flag_9_dictionary[fiscal_year_id] = {"count": 0, "set": set()}
+
+    data_cache_file_name = directory_dictionary["calculations_data"] + os.sep + "red_flag_9" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "data" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        red_flag_9_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+        continue
+
+
     for procuring_entity_id in fiscal_year_procuring_entity_award_dictionary[fiscal_year_id]:
         fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id] = {}
         specific_procuring_entity_awards = fiscal_year_procuring_entity_award_dictionary[fiscal_year_id][procuring_entity_id]
@@ -556,6 +458,11 @@ for fiscal_year_id in fiscal_year_procuring_entity_award_dictionary:
                     fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id] = set()
                     fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id].add(award_id)
 
+    if len(red_flag_9_dictionary[fiscal_year_id]) > 0:
+        serialization_deserialization_object.set_serialization_data(red_flag_9_dictionary[fiscal_year_id])
+        serialization_deserialization_object.serialize_in_json()
+
+
 
 
 # No information on appeals and payments is available yet
@@ -563,6 +470,15 @@ for fiscal_year_id in fiscal_year_procuring_entity_award_dictionary:
 fiscal_year_award_appeal_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_award_appeal_dictionary[fiscal_year_id] = {}
+
+    data_cache_file_name = directory_dictionary["data"] + os.sep + "awards_tenders" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "awards" + ".json"
+    serialization_deserialization_object.set_serialization_file_name(data_cache_file_name)
+    file_exists = serialization_deserialization_object.check_file_exists()
+
+    if file_exists:
+        fiscal_year_award_appeal_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
+        continue
+
     specific_fiscal_year_awards = fiscal_year_award_dictionary[fiscal_year_id]
     for award_id in specific_fiscal_year_awards:
         specific_award_appeals = {}#get_specific_award_appeals(selection_object, query_executor, award_id) # no data is available yet
@@ -576,6 +492,10 @@ for fiscal_year_id in fiscal_year_dictionary:
             fiscal_year_award_appeal_dictionary[fiscal_year_id][award_id] = appeal_dictionary
         else:
             fiscal_year_award_appeal_dictionary[fiscal_year_id][award_id] = specific_award_appeals
+
+    if len(fiscal_year_award_appeal_dictionary[fiscal_year_id]) > 0:
+        serialization_deserialization_object.set_serialization_data(fiscal_year_award_appeal_dictionary[fiscal_year_id])
+        serialization_deserialization_object.serialize_in_json()
 
 
 # Get a specific fiscal year tender award(s)
@@ -634,6 +554,55 @@ for fiscal_year_id in fiscal_year_dictionary:
         else:
             red_flag_1_dictionary[fiscal_year_id]["with_a_plan"] += 1
             #red_flag_1_dictionary[fiscal_year_id]["with_a_plan_set"].add(procuring_entity_id) # not of interest for now
+
+for fiscal_year_id in red_flag_1_dictionary:
+    value_list = [red_flag_1_dictionary[fiscal_year_id]["with_a_plan"], red_flag_1_dictionary[fiscal_year_id]["without_a_plan"]]
+    color_list = ['green', 'orange']
+    label_list = ["Submitted plan", "Did not submit plans"]
+    width = 8
+    height = 3
+    visualization_file_name = "data" + os.sep + "cached_generated_multimedia" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_1.jpg"
+    title = fiscal_year_id.replace("/", "-")  + " fiscal year plan submissions"
+    pie_chart_drawer_object = PieChartDrawer(value_list, color_list, label_list, width, height, visualization_file_name, title)
+    pie_chart_drawer_object.draw_pie_chart()
+
+    spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_1.xlsx"
+
+    data = [
+              ['Procuring entity id', 'name', 'identifier_scheme', 'identifier_legal_name', 'address_street', 'address_locality', 'address_region',
+               'address_postal_code', 'address_country_name', 'contact_point_email', 'contact_point_telephone', 'contact_point_fax_number', 'contact_point_url',
+               'contact_person_nat_id', 'contact_person_nationality', 'ext_bank_name', 'ext_tin'
+              ]
+           ]
+    for entity_id in fiscal_year_procuring_entity_dictionary[fiscal_year_id]:
+        entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id][entity_id]
+        legacy_id = entity_dictionary['legacy_id']
+        if legacy_id in red_flag_1_dictionary[fiscal_year_id]['without_a_plan_set']:
+            name = entity_dictionary['name']
+            identifier_scheme = entity_dictionary['identifier_scheme']
+            identifier_legal_name = entity_dictionary['identifier_legal_name']
+            address_street = entity_dictionary['address_street']
+            address_locality = entity_dictionary['address_locality']
+            address_region = entity_dictionary['address_region']
+            address_postal_code = entity_dictionary['address_postal_code']
+            address_country_name = entity_dictionary['address_country_name']
+            contact_point_name = entity_dictionary['contact_point_name']
+            contact_point_email = entity_dictionary['contact_point_email']
+            contact_point_telephone = entity_dictionary['contact_point_telephone']
+            contact_point_fax_number = entity_dictionary['contact_point_fax_number']
+            contact_point_url = entity_dictionary['contact_point_url']
+            contact_person_nat_id = entity_dictionary['contact_person_nat_id']
+            contact_person_nationality = entity_dictionary['contact_person_nationality']
+            ext_bank_name = entity_dictionary['ext_bank_name']
+            ext_bank_code = entity_dictionary['ext_bank_code']
+            ext_tin = entity_dictionary['ext_tin']
+
+            data.append([legacy_id, name, identifier_scheme, identifier_legal_name, address_street, address_locality, address_region,
+             address_postal_code, address_country_name, contact_point_email, contact_point_telephone, contact_point_fax_number, contact_point_url,
+             contact_person_nat_id, contact_person_nationality, ext_bank_name, ext_tin])
+
+    spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
+    spreadsheet_creator_object.create_spreadsheet()
 
 
 
@@ -832,14 +801,18 @@ submission_delay_configuration = 0 # configuration stored in the database with a
 red_flag_11_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_start_date = fiscal_year_dictionary[fiscal_year_id]["start_date"]
-    fiscal_year_start_date_and_time = str(fiscal_year_start) + " " + "00:00:00"
+    fiscal_year_start_date_and_time = fiscal_year_start_date + " " + "00:00:00"
     red_flag_11_dictionary[fiscal_year_id] = {"late_submission":0, "on_time_submission":0, "late_submission_set": set()}
     year_procuring_entity_plans = fiscal_year_procuring_entity_plan_dictionary[fiscal_year_id]
     for procuring_entity_id in year_procuring_entity_plans:
         plan_dictionary = year_procuring_entity_plans[procuring_entity_id]
         for plan_id in plan_dictionary:
             submission_date_and_time = plan_dictionary[plan_id]["submission_date_and_time"]
-            day_difference = date.strptime(fiscal_year_start_date_and_time, "%Y/%m/%d") - date.strptime(submission_date_and_time, "%Y/%m/%d")
+            formated_submission_date_and_time = str(submission_date_and_time).split("T")[0].split(" ")[0]
+
+            time_delta = (datetime.strptime(fiscal_year_start_date.replace("-", "/"), "%Y/%m/%d") - datetime.strptime(formated_submission_date_and_time.replace("-", "/"), "%Y/%m/%d")) / 86400
+            day_difference = (((time_delta.days * 24) + (time_delta.total_seconds()/3600)) / 24)
+
             if day_difference > submission_delay_configuration:
                 red_flag_11_dictionary[fiscal_year_id]["late_submission"] += 1
                 red_flag_11_dictionary[fiscal_year_id]["late_submission_set"].add(procuring_entity_id)

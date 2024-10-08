@@ -9,8 +9,12 @@ def get_fiscal_years(selection_object, query_executor):
 	result_dictionary = cursor.fetchall()
 	for row in result_dictionary:
 		fiscal_year = row['fiscal_year']
+		fiscal_year_dictionary[fiscal_year] = {}
 		if len(str(fiscal_year)) > 0:
-			fiscal_year_dictionary[fiscal_year] = fiscal_year
+			fiscal_year_dictionary[fiscal_year]['id'] = fiscal_year
+			fiscal_year_dictionary[fiscal_year]['start_date'] =  fiscal_year[:4] + "-07-01"
+			fiscal_year_dictionary[fiscal_year]['end_date'] = fiscal_year[-4:] + "-06-30"
+
 	return fiscal_year_dictionary
 
 
@@ -68,6 +72,9 @@ def get_specific_party_fiscal_year_plans(selection_object, query_executor, fisca
 		plan_dictionary['version'] = row['version']
 		plan_dictionary['hash'] = row['hash']
 		plan_dictionary['created_at'] = row['created_at']
+		# RPPA specific
+		plan_dictionary['submission_date_and_time'] = row['created_at']
+		# end of RPPA specific data
 		plan_dictionary['deleted_at'] = row['deleted_at']
 		plan_dictionary['updated_at'] = row['updated_at']
 		plan_dictionary['status'] = row['status']
