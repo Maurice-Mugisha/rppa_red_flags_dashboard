@@ -93,7 +93,11 @@
      for(var i=0; i<calledElements.length; i++){
         calledElements[i].style.display = "none";
      }
-     matchedElement.style.display = "table"
+     if(matchedElement.style.display == "none"){
+        matchedElement.style.display = "table"; alert(0);
+     }else if(matchedElement.style.display == "table"){
+        matchedElement.style.display = "none";alert(1);
+     }
   }
 </script>
 
@@ -136,7 +140,7 @@
   <tr>
     <td width="15%" valign="top" align="middle">
       <h4>Fiscal years</h4>
-      <label class="fiscal_year_label" id="fy_1" onclick="showVisualization(this, 'red_flags');">Fiscal year 1</label><br />
+      <label class="fiscal_year_label" id="fy_1" onclick="showFiscalYearElements(this);">Fiscal year 1</label><br />
       <label class="fiscal_year_label" id="fy_2">Fiscal year 2</label><br />
       <label class="fiscal_year_label" id="fy_3">Fiscal year 3</label><br />
       <label class="fiscal_year_label" id="fy_4">Fiscal year 4</label><br />
@@ -147,13 +151,23 @@
     <td width="25%" rowspan="2" valign="top" align="middle">
       <h4>Red flags</h4>
       <label class="red_flag_name" id="rdf_1" onclick="showVisualization(this, 'red_flags');">Red flag 1</label><br />
-      <label class="red_flag_name" id="rdf_2">Red flag 2</label><br />
+      <label class="red_flag_name" id="rdf_2" onclick="showVisualization(this, 'red_flags');">Red flag 2</label><br />
       <label class="red_flag_name" id="rdf_3">Red flag 3</label><br />
       <label class="red_flag_name" id="rdf_4">Red flag 4</label><br />
       <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
       <table border="0" cellpadding="0" cellspacing="0" width="100%" id="rdf_1_visualiztion" class="red_flags" style="display: none;">
         <tr>
           <td valign="middle" align="center">For red flag 1</td>
+        </tr>
+        <tr>
+          <td valign="middle" align="center">
+            <a href="#" style="text-decoration: none; font-size: 12px;">Download report</a>
+          </td>
+        </tr>
+      </table>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" id="rdf_2_visualiztion" class="red_flags" style="display: none;">
+        <tr>
+          <td valign="middle" align="center">For red flag 2</td>
         </tr>
         <tr>
           <td valign="middle" align="center">

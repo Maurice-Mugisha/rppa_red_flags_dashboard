@@ -1,34 +1,4 @@
-import os
-from pathlib import Path
-
-
-
-
-class DashboardMarkup:
-
-
-    def __init__(self, file_name):
-        self.file_name = file_name
-
-
-    def set_fiscal_year_list(self, fiscal_year_list):
-        self.fiscal_year_list = fiscal_year_list
-
-
-    def set_red_flag_list(self, red_flag_list):
-        self.red_flag_list = red_flag_list
-
-
-    def set_red_flag_fiscal_year_map(self, red_flag_fiscal_year_dictionary):
-        self.red_flag_fiscal_year_dictionary = red_flag_fiscal_year_dictionary
-
-
-    def set_visualization_dictionary(self, visualization_dictionary):
-        self.visualization_dictionary = visualization_dictionary
-
-
-    def get_css(self):
-        css = '''
+<!DOCTYPE html><html><head><title>Red flags dashboard</title>
            <style media="screen" type="text/css">
 
              body{
@@ -114,13 +84,7 @@ class DashboardMarkup:
              }
 
            </style>
-        '''
-        self.css = css
-        return css
-
-
-    def get_js(self):
-        js = '''
+        
             <script type="text/javascript">
               function showVisualization(callingElement, calledClass){
                  var matchingElementId = callingElement.id + "_visualiztion";
@@ -147,13 +111,7 @@ class DashboardMarkup:
                  }
               }
             </script>
-        '''
-        self.js = js
-        return js
-
-
-    def get_header(self):
-        header_markup = """
+        </head><body>
            <table id="header_table" cellpading="0" cellspacing="0" border="0">
              <tr id="header_table_top_row">
                <td align="right" valign="middle" width="14%">
@@ -182,29 +140,34 @@ class DashboardMarkup:
                </td>
              </tr>
            </table>
-        """
-        self.header_markup = header_markup
-        return header_markup
-
-
-    def get_body(self):
-        body_markup = "<body>"
-        body_markup += self.get_header()
-        table_markup = '''
+        
            <table id="body_table" cellpading="0" cellspacing="0" border="0" height="70vh">
              <tr>
                <td width="15%" valign="top" align="middle">
                  <h4>Fiscal years</h4>
-                 ''' + self.get_fiscal_year_markup() + '''
+                 <label class="fiscal_year_label" id="20242025" onclick="showFiscalYearElements(this);">2024/2025</label><br />
                  <br />
                  <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
                </td>
                <td rowspan="2"></td>
                <td width="25%" rowspan="2" valign="top" align="middle">
                  <h4>Red flags</h4>
-                ''' + self.get_red_flag_labels() + '''
+                <label class="red_flag_name 20242025_element" id="20242025red_flag_1" onclick="showVisualization(this, 'red_flags');">Red flag 1</label><br />
                  <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
-                 ''' + self.get_visualization_markup() + '''
+                 
+               <table border="0" cellpadding="0" cellspacing="0" width="70%" id="20242025red_flag_1_visualiztion" class="red_flags" style="display: none;">
+               <tr>
+                 <td valign="middle" align="center"><img src="data/cached_generated_multimedia/2024-2025/red_flag_1.jpg" width="100%" height="100%" /></td>
+               </tr>
+               <tr>
+                 <td valign="top" align="center">
+                   <a href="data/cached_generated_reports/2024-2025/red_flag_1.xlsx" style="text-decoration: none; font-size: 12px;">
+                     <img src="images/report_icon.png" width="30px" height="20px" title="Download report" />
+                   </a>
+                 </td>
+               </tr>
+               </table>
+            
                </td>
              </tr>
              <tr>
@@ -216,63 +179,7 @@ class DashboardMarkup:
                <td></td>
              </tr>
            </table>
-        '''
-        body_markup += table_markup
-        body_markup += self.get_footer()
-        body_markup += "</body>"
-        self.body_markup = body_markup
-        return body_markup
-
-
-    def get_sections(self):
-        sections_markup = '''
-        '''
-        return sections_markup
-
-
-    def get_fiscal_year_markup(self):
-        fiscal_year_markup = ""
-        for fiscal_year in self.fiscal_year_list:
-            fiscal_year_markup_id = fiscal_year.replace("/", "")
-            fiscal_year_markup += '''<label class="fiscal_year_label" id="''' + fiscal_year_markup_id + '''" onclick="showFiscalYearElements(this);">''' + fiscal_year + '''</label><br />'''
-        return fiscal_year_markup
-
-
-    def get_red_flag_labels(self):
-        red_flag_label_markup = ""
-        for red_flag in self.red_flag_list:
-            red_flag_id = red_flag["id"]
-            red_flag_name = red_flag["name"]
-            fiscal_year_class = self.red_flag_fiscal_year_dictionary[red_flag_id].replace("/", "")
-            red_flag_label_markup = '''<label class="red_flag_name ''' + fiscal_year_class + '''_element" id="''' + red_flag_id + '''" onclick="showVisualization(this, 'red_flags');">''' + red_flag_name + '''</label><br />'''
-        return red_flag_label_markup
-
-
-    def get_visualization_markup(self):
-        visualization_table = ""
-        for red_flag in self.red_flag_list:
-            red_flag_id = red_flag["id"]
-            visualization_link = self.visualization_dictionary[red_flag_id]['visualization_link']
-            report_link = self.visualization_dictionary[red_flag_id]['report_link']
-            visualization_table += '''
-               <table border="0" cellpadding="0" cellspacing="0" width="70%" id="''' + red_flag_id + '''_visualiztion" class="red_flags" style="display: none;">
-               <tr>
-                 <td valign="middle" align="center"><img src="''' + visualization_link + '''" width="100%" height="100%" /></td>
-               </tr>
-               <tr>
-                 <td valign="top" align="center">
-                   <a href="''' + report_link + '''" style="text-decoration: none; font-size: 12px;">
-                     <img src="images/report_icon.png" width="30px" height="20px" title="Download report" />
-                   </a>
-                 </td>
-               </tr>
-               </table>
-            '''
-        return visualization_table
-
-
-    def get_footer(self):
-        footer_markup = '''
+        
            <table id="footer_table" cellpading="0" cellspacing="0" border="0" height="15vh">
              <tr>
                <td colspan="3"></td>
@@ -283,28 +190,4 @@ class DashboardMarkup:
                <td></td>
              </tr>
            </table>
-        '''
-        self.footer_markup = footer_markup
-        return footer_markup
-
-
-    def get_dahsboard_html_page(self, title):
-        web_page = "<!DOCTYPE html>"
-        web_page += "<html>"
-        web_page += "<head>"
-        web_page += "<title>" + title + "</title>"
-        web_page += self.get_css()
-        web_page += self.get_js()
-        web_page += "</head>"
-        web_page += self.get_body()
-        web_page += "</html>"
-
-        file_exists = os.path.isfile(self.file_name)
-        if file_exists == False:
-            output_file = Path(self.file_name)
-            output_file.parent.mkdir(exist_ok=True, parents=True)
-
-        file = open(self.file_name, "w")
-        file.write(web_page)
-        file.close()
-        return web_page
+        </body></html>

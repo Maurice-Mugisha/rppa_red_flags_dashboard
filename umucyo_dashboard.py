@@ -12,6 +12,7 @@ from datetime import datetime
 from includes.visualization.matplotlib_bar_graph import *
 from includes.visualization.matplotlib_pie_chart import *
 from includes.report_generation.spreadsheet_creator import *
+from includes.dashboard_markup import *
 import json
 
 import time
@@ -537,6 +538,10 @@ for fiscal_year_id in fiscal_year_dictionary:
 #########################################################################################################
 
 
+red_flag_list = list()
+visualization_dictionary = {}
+fiscal_year_list = []
+red_flag_fiscal_year_dictionary = {}
 
 # Red flag 1: Procuring entities that did not submit their procurement plans
 #             get the procurement stages of every fiscal year, and then pick out the planning stage
@@ -554,6 +559,13 @@ for fiscal_year_id in fiscal_year_dictionary:
         else:
             red_flag_1_dictionary[fiscal_year_id]["with_a_plan"] += 1
             #red_flag_1_dictionary[fiscal_year_id]["with_a_plan_set"].add(procuring_entity_id) # not of interest for now
+    red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_1"
+    red_flag_dictionary = {"id": red_flag_id, "name": "Red flag 1"}
+    red_flag_list.append(red_flag_dictionary)
+    visualization_dictionary[red_flag_id] = {}
+    fiscal_year_list.append(fiscal_year_id)
+    red_flag_fiscal_year_dictionary[red_flag_id] = fiscal_year_id
+    
 
 for fiscal_year_id in red_flag_1_dictionary:
     value_list = [red_flag_1_dictionary[fiscal_year_id]["with_a_plan"], red_flag_1_dictionary[fiscal_year_id]["without_a_plan"]]
@@ -567,6 +579,10 @@ for fiscal_year_id in red_flag_1_dictionary:
     pie_chart_drawer_object.draw_pie_chart()
 
     spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_1.xlsx"
+
+    red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_1"
+    visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
+    visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
 
     data = [
               ['Procuring entity id', 'name', 'identifier_scheme', 'identifier_legal_name', 'address_street', 'address_locality', 'address_region',
@@ -604,6 +620,14 @@ for fiscal_year_id in red_flag_1_dictionary:
     spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
     spreadsheet_creator_object.create_spreadsheet()
 
+
+print(fiscal_year_list)
+dashboard_markup = DashboardMarkup("dashboard.html")
+dashboard_markup.set_fiscal_year_list(fiscal_year_list)
+dashboard_markup.set_red_flag_list(red_flag_list)
+dashboard_markup.set_red_flag_fiscal_year_map(red_flag_fiscal_year_dictionary)
+dashboard_markup.set_visualization_dictionary(visualization_dictionary)
+dashboard_html_page = dashboard_markup.get_dahsboard_html_page("Red flags dashboard")
 
 
 # Red flag 2: Tender has less than three bids (not a closed tender)

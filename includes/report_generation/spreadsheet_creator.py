@@ -25,6 +25,7 @@ class SpreadsheetCreator:
         self.ensure_directory_exists()
         workbook.save(self.file_name)
 
+
     def ensure_directory_exists(self):
         file_exists = os.path.isfile(self.file_name)
         if file_exists == False:
