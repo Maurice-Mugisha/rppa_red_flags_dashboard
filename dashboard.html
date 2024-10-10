@@ -81,6 +81,8 @@
 
              .red_flag_name{
                display: none;
+               font-size: 12px;
+               color: #555555;
              }
 
            </style>
@@ -143,17 +145,17 @@
         
            <table id="body_table" cellpading="0" cellspacing="0" border="0" height="70vh">
              <tr>
-               <td width="15%" valign="top" align="middle">
+               <td width="12%" valign="top" align="middle">
                  <h4>Fiscal years</h4>
                  <label class="fiscal_year_label" id="20242025" onclick="showFiscalYearElements(this);">2024/2025</label><br />
                  <br />
                  <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
                </td>
                <td rowspan="2"></td>
-               <td width="25%" rowspan="2" valign="top" align="middle">
+               <td width="30%" rowspan="2" valign="top" align="left">
                  <h4>Red flags</h4>
-                <label class="red_flag_name 20242025_element" id="20242025red_flag_1" onclick="showVisualization(this, 'red_flags');">Red flag 1</label><br />
-                 <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
+                <label class="red_flag_name 20242025_element" id="20242025red_flag_1" onclick="showVisualization(this, 'red_flags');">Procuring entity without a procurment plan</label><br /><label class="red_flag_name 20242025_element" id="20242025red_flag_2" onclick="showVisualization(this, 'red_flags');">Tender with less than X(=3) bids</label><br /><label class="red_flag_name 20242025_element" id="20242025red_flag_4" onclick="showVisualization(this, 'red_flags');">Supplying entities with a shared contact</label><br />
+                 <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 0%; margin-right: 20%;">
                  
                <table border="0" cellpadding="0" cellspacing="0" width="70%" id="20242025red_flag_1_visualiztion" class="red_flags" style="display: none;">
                <tr>
@@ -162,6 +164,32 @@
                <tr>
                  <td valign="top" align="center">
                    <a href="data/cached_generated_reports/2024-2025/red_flag_1.xlsx" style="text-decoration: none; font-size: 12px;">
+                     <img src="images/report_icon.png" width="30px" height="20px" title="Download report" />
+                   </a>
+                 </td>
+               </tr>
+               </table>
+            
+               <table border="0" cellpadding="0" cellspacing="0" width="70%" id="20242025red_flag_2_visualiztion" class="red_flags" style="display: none;">
+               <tr>
+                 <td valign="middle" align="center"><img src="data/cached_generated_multimedia/2024-2025/red_flag_2.jpg" width="100%" height="100%" /></td>
+               </tr>
+               <tr>
+                 <td valign="top" align="center">
+                   <a href="data/cached_generated_reports/2024-2025/red_flag_2.xlsx" style="text-decoration: none; font-size: 12px;">
+                     <img src="images/report_icon.png" width="30px" height="20px" title="Download report" />
+                   </a>
+                 </td>
+               </tr>
+               </table>
+            
+               <table border="0" cellpadding="0" cellspacing="0" width="70%" id="20242025red_flag_4_visualiztion" class="red_flags" style="display: none;">
+               <tr>
+                 <td valign="middle" align="center"><img src="data/cached_generated_multimedia/2024-2025/red_flag_4.jpg" width="100%" height="100%" /></td>
+               </tr>
+               <tr>
+                 <td valign="top" align="center">
+                   <a href="data/cached_generated_reports/2024-2025/red_flag_4.xlsx" style="text-decoration: none; font-size: 12px;">
                      <img src="images/report_icon.png" width="30px" height="20px" title="Download report" />
                    </a>
                  </td>

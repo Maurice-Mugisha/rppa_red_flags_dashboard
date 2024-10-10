@@ -22,10 +22,10 @@ class BarGraphDrawer:
     def draw_bar_graph(self):
         fig = plt.figure(figsize = (self.width, self.height))
         plt.bar(list(self.data_dictionary.keys()), list(self.data_dictionary.values()), color=self.bar_color, edgecolor=self.edge_color)
-        plt.xlabel(x_axis_label)
-        plt.ylabel(y_axis_label)
+        plt.xlabel(self.x_axis_label)
+        plt.ylabel(self.y_axis_label)
         plt.title(self.title)
-        plt.legend()
+        #plt.legend()
         plt.tight_layout()
         plt.savefig(self.save_path_and_name, transparent=True)
 

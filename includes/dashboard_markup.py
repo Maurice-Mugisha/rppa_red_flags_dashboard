@@ -19,8 +19,8 @@ class DashboardMarkup:
         self.red_flag_list = red_flag_list
 
 
-    def set_red_flag_fiscal_year_map(self, red_flag_fiscal_year_dictionary):
-        self.red_flag_fiscal_year_dictionary = red_flag_fiscal_year_dictionary
+    def set_fiscal_year_red_flag_map(self, fiscal_year_red_flag_dictionary):
+        self.fiscal_year_red_flag_dictionary = fiscal_year_red_flag_dictionary
 
 
     def set_visualization_dictionary(self, visualization_dictionary):
@@ -111,6 +111,8 @@ class DashboardMarkup:
 
              .red_flag_name{
                display: none;
+               font-size: 12px;
+               color: #555555;
              }
 
            </style>
@@ -193,17 +195,17 @@ class DashboardMarkup:
         table_markup = '''
            <table id="body_table" cellpading="0" cellspacing="0" border="0" height="70vh">
              <tr>
-               <td width="15%" valign="top" align="middle">
+               <td width="12%" valign="top" align="middle">
                  <h4>Fiscal years</h4>
                  ''' + self.get_fiscal_year_markup() + '''
                  <br />
                  <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
                </td>
                <td rowspan="2"></td>
-               <td width="25%" rowspan="2" valign="top" align="middle">
+               <td width="30%" rowspan="2" valign="top" align="left">
                  <h4>Red flags</h4>
                 ''' + self.get_red_flag_labels() + '''
-                 <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
+                 <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 0%; margin-right: 20%;">
                  ''' + self.get_visualization_markup() + '''
                </td>
              </tr>
@@ -240,11 +242,13 @@ class DashboardMarkup:
 
     def get_red_flag_labels(self):
         red_flag_label_markup = ""
-        for red_flag in self.red_flag_list:
-            red_flag_id = red_flag["id"]
-            red_flag_name = red_flag["name"]
-            fiscal_year_class = self.red_flag_fiscal_year_dictionary[red_flag_id].replace("/", "")
-            red_flag_label_markup = '''<label class="red_flag_name ''' + fiscal_year_class + '''_element" id="''' + red_flag_id + '''" onclick="showVisualization(this, 'red_flags');">''' + red_flag_name + '''</label><br />'''
+        for fiscal_year_id in self.fiscal_year_red_flag_dictionary:
+            fiscal_year_class = fiscal_year_id.replace("/", "")
+            for red_flag in self.fiscal_year_red_flag_dictionary[fiscal_year_id]:
+                red_flag_id = red_flag["id"]
+                red_flag_name = red_flag["name"]
+                red_flag_label_markup += '''<label class="red_flag_name ''' + fiscal_year_class + '''_element" id="''' + red_flag_id + '''" onclick="showVisualization(this, 'red_flags');">''' + red_flag_name + '''</label><br />'''
+
         return red_flag_label_markup
 
 
