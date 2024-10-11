@@ -256,12 +256,18 @@ class DashboardMarkup:
         visualization_table = ""
         for red_flag in self.red_flag_list:
             red_flag_id = red_flag["id"]
+
+            is_image = self.visualization_dictionary[red_flag_id]['is_image']
             visualization_link = self.visualization_dictionary[red_flag_id]['visualization_link']
             report_link = self.visualization_dictionary[red_flag_id]['report_link']
+
+            visualization_markup = ""
+            visualization_markup = '''<img src="''' + visualization_link + '''" width="100%" height="100%" />''' if is_image  == True else self.read_file(visualization_link)
+
             visualization_table += '''
                <table border="0" cellpadding="0" cellspacing="0" width="70%" id="''' + red_flag_id + '''_visualiztion" class="red_flags" style="display: none;">
                <tr>
-                 <td valign="middle" align="center"><img src="''' + visualization_link + '''" width="100%" height="100%" /></td>
+                 <td valign="middle" align="center">''' + visualization_markup + '''</td>
                </tr>
                <tr>
                  <td valign="top" align="center">
@@ -312,3 +318,15 @@ class DashboardMarkup:
         file.write(web_page)
         file.close()
         return web_page
+
+
+    def read_file(self, file_name):
+        content = ""
+        file_exists = os.path.isfile(file_name)
+        if file_exists == True:
+            file = open(file_name, "r")
+            content = file.read()
+            file.close()
+        else:
+            content = "Not available"
+        return content

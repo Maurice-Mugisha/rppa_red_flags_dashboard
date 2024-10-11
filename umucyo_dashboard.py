@@ -13,122 +13,14 @@ from includes.visualization.matplotlib_bar_graph import *
 from includes.visualization.matplotlib_pie_chart import *
 from includes.report_generation.spreadsheet_creator import *
 from includes.dashboard_markup import *
+from includes.field_list_creator import *
+from includes.non_image_visualization_markup import *
 import json
 
 import time
 from datetime import datetime
 
 
-
-def get_procurement_party_field_list():
-    field_list = ['Procuring entity id', 'name', 'identifier_scheme', 'identifier_legal_name', 'address_street', 'address_locality', 'address_region',
-                  'address_postal_code', 'address_country_name', 'contact_point_email', 'contact_point_telephone', 'contact_point_fax_number', 'contact_point_url',
-                  'contact_person_nat_id', 'contact_person_nationality', 'ext_bank_name', 'ext_tin'
-                 ]
-    return field_list
-
-
-def get_party_data_list(entity_dictionary):
-
-    name = entity_dictionary['name']
-    identifier_scheme = entity_dictionary['identifier_scheme']
-    identifier_legal_name = entity_dictionary['identifier_legal_name']
-    address_street = entity_dictionary['address_street']
-    address_locality = entity_dictionary['address_locality']
-    address_region = entity_dictionary['address_region']
-    address_postal_code = entity_dictionary['address_postal_code']
-    address_country_name = entity_dictionary['address_country_name']
-    contact_point_name = entity_dictionary['contact_point_name']
-    contact_point_email = entity_dictionary['contact_point_email']
-    contact_point_telephone = entity_dictionary['contact_point_telephone']
-    contact_point_fax_number = entity_dictionary['contact_point_fax_number']
-    contact_point_url = entity_dictionary['contact_point_url']
-    contact_person_nat_id = entity_dictionary['contact_person_nat_id']
-    contact_person_nationality = entity_dictionary['contact_person_nationality']
-    ext_bank_name = entity_dictionary['ext_bank_name']
-    ext_bank_code = entity_dictionary['ext_bank_code']
-    ext_tin = entity_dictionary['ext_tin']
-
-    data_list = [legacy_id, name, identifier_scheme, identifier_legal_name, address_street, address_locality, address_region,
-                 address_postal_code, address_country_name, contact_point_email, contact_point_telephone, contact_point_fax_number, contact_point_url,
-                 contact_person_nat_id, contact_person_nationality, ext_bank_name, ext_tin
-                ]
-
-    return data_list
-
-
-def get_tender_field_list():
-    field_list = ['id', 'language', 'title', 'description', 'main_procurement_category', 'tender_status', 'min_value_amount', 'min_value_currency', 'value_amount',
-                  'value_currency', 'procurement_method', 'procurement_method_details', 'procurement_method_rationale', 'award_criteria', 'award_criteria_details', 'submission_method',
-                  'has_enquiries', 'tender_period_start_date', 'tender_period_end_date', 'tender_period_duration_in_days', 'enquiry_period_start_date', 'enquiry_period_end_date',
-                  'enquiry_period_duration_in_days', 'participation_fees_id', 'participation_fees_value_amount', 'participation_fees_value_currency', 'ext_tender_fee_amount',
-                  'ext_total_tender_security_amount', 'ext_simpld_yn', 'ext_jv_yn', 'ext_consult_selt_mthod', 'ext_tender_estimated_value', 'ext_tender_estimated_currency',
-                  'ext_planning_reference_number', 'ext_pe_code', 'ext_fiscal_year', 'ext_tender_type_code', 'ext_tender_method_code', 'ext_mod_date', 'ext_rgt_type_code', 'ext_tender_stage_code',
-                  'legacy_id', 'is_test_data', 'version', 'hash', 'created_at', 'deleted_at', 'updated_at', 'status'
-                 ]
-    return field_list
-
-
-def get_tender_data_list(tender_dictionary):
-    id = tender_dictionary['id']
-    language = tender_dictionary['language']
-    title = tender_dictionary['title']
-    description = tender_dictionary['description']
-    main_procurement_category = tender_dictionary['main_procurement_category']
-    tender_status = tender_dictionary['tender_status']
-    min_value_amount = tender_dictionary['min_value_amount']
-    min_value_currency = tender_dictionary['min_value_currency']
-    value_amount = tender_dictionary['value_amount']
-    value_currency = tender_dictionary['value_currency']
-    procurement_method = tender_dictionary['procurement_method']
-    procurement_method_details = tender_dictionary['procurement_method_details']
-    procurement_method_rationale = tender_dictionary['procurement_method_rationale']
-    award_criteria = tender_dictionary['award_criteria']
-    award_criteria_details = tender_dictionary['award_criteria_details']
-    submission_method = tender_dictionary['submission_method']
-    has_enquiries = tender_dictionary['has_enquiries']
-    tender_period_start_date = tender_dictionary['tender_period_start_date']
-    tender_period_end_date = tender_dictionary['tender_period_end_date']
-    tender_period_duration_in_days = tender_dictionary['tender_period_duration_in_days']
-    enquiry_period_start_date = tender_dictionary['enquiry_period_start_date']
-    enquiry_period_end_date = tender_dictionary['enquiry_period_end_date']
-    enquiry_period_duration_in_days = tender_dictionary['enquiry_period_duration_in_days'] # Almost a useless field to maintain (derivable field from start and end inquiry dates)
-    participation_fees_id = tender_dictionary['participation_fees_id']
-    participation_fees_value_amount = tender_dictionary['participation_fees_value_amount']
-    participation_fees_value_currency = tender_dictionary['participation_fees_value_currency']
-    ext_tender_fee_amount = tender_dictionary['ext_tender_fee_amount']
-    ext_total_tender_security_amount = tender_dictionary['ext_total_tender_security_amount']
-    ext_simpld_yn = tender_dictionary['ext_simpld_yn']
-    ext_jv_yn = tender_dictionary['ext_jv_yn']
-    ext_consult_selt_mthod = tender_dictionary['ext_consult_selt_mthod']
-    ext_tender_estimated_value = tender_dictionary['ext_tender_estimated_value']
-    ext_tender_estimated_currency = tender_dictionary['ext_tender_estimated_currency']
-    ext_planning_reference_number = tender_dictionary['ext_planning_reference_number']
-    ext_pe_code = tender_dictionary['ext_pe_code']
-    ext_fiscal_year = tender_dictionary['ext_fiscal_year']
-    ext_tender_type_code = tender_dictionary['ext_tender_type_code']
-    ext_tender_method_code = tender_dictionary['ext_tender_method_code']
-    ext_mod_date = tender_dictionary['ext_mod_date']
-    ext_rgt_type_code = tender_dictionary['ext_rgt_type_code']
-    ext_tender_stage_code = tender_dictionary['ext_tender_stage_code']
-    legacy_id = tender_dictionary['legacy_id']
-    is_test_data = tender_dictionary['is_test_data']
-    version = tender_dictionary['version']
-    hash = tender_dictionary['hash']
-    created_at = tender_dictionary['created_at']
-    deleted_at = tender_dictionary['deleted_at']
-    updated_at = tender_dictionary['updated_at']
-    status = tender_dictionary['status']
-
-    data_list = [id, language, title, description, main_procurement_category, tender_status, min_value_amount, min_value_currency, value_amount,
-                 value_currency, procurement_method, procurement_method_details, procurement_method_rationale, award_criteria, award_criteria_details, submission_method,
-                 has_enquiries, tender_period_start_date, tender_period_end_date, tender_period_duration_in_days, enquiry_period_start_date, enquiry_period_end_date,
-                 enquiry_period_duration_in_days, participation_fees_id, participation_fees_value_amount, participation_fees_value_currency, ext_tender_fee_amount,
-                 ext_total_tender_security_amount, ext_simpld_yn, ext_jv_yn, ext_consult_selt_mthod, ext_tender_estimated_value, ext_tender_estimated_currency,
-                 ext_planning_reference_number, ext_pe_code, ext_fiscal_year, ext_tender_type_code, ext_tender_method_code, ext_mod_date, ext_rgt_type_code, ext_tender_stage_code,
-                 legacy_id, is_test_data, version, hash, created_at, deleted_at, updated_at, status
-                ]
-    return data_list
 
 
 
@@ -651,10 +543,12 @@ for fiscal_year_id in fiscal_year_dictionary:
 #########################################################################################################
 
 
+field_list_creator_object = FieldListCreator()
 red_flag_list = list()
 visualization_dictionary = {}
 fiscal_year_list = []
 fiscal_year_red_flag_dictionary = {}
+visualization_markup_object = NonImageVisualizationMarkup()
 
 # Red flag 1: Procuring entities that did not submit their procurement plans
 #             get the procurement stages of every fiscal year, and then pick out the planning stage
@@ -676,6 +570,7 @@ for fiscal_year_id in fiscal_year_dictionary:
     red_flag_dictionary = {"id": red_flag_id, "name": "Procuring entity without a procurment plan"}
     red_flag_list.append(red_flag_dictionary)
     visualization_dictionary[red_flag_id] = {}
+    visualization_dictionary[red_flag_id]['is_image'] = True
     if fiscal_year_id not in fiscal_year_list:
         fiscal_year_list.append(fiscal_year_id)
     if fiscal_year_id not in fiscal_year_red_flag_dictionary:
@@ -705,20 +600,17 @@ for fiscal_year_id in red_flag_1_dictionary:
 
     # Reporting on red flag 1 using a spreadsheet
     data = list()
-    data.append(get_procurement_party_field_list())
+    data.append(field_list_creator_object.get_procurement_party_field_list([]))
 
     for entity_id in fiscal_year_procuring_entity_dictionary[fiscal_year_id]:
         entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id][entity_id]
         legacy_id = entity_dictionary['legacy_id']
         if legacy_id in red_flag_1_dictionary[fiscal_year_id]['without_a_plan_set']:
-            data_list = get_party_data_list(entity_dictionary)
+            data_list = field_list_creator_object.get_party_data_list(entity_dictionary, [])
             data.append(data_list)
 
     spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
     spreadsheet_creator_object.create_spreadsheet()
-
-
-
 
 
 
@@ -756,9 +648,10 @@ for fiscal_year_id in fiscal_year_dictionary:
     red_flag_2_dictionary[fiscal_year_id]["less_than_x_bids_set"] = with_less_than_x_bids_set
 
     red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_2"
-    red_flag_dictionary = {"id": red_flag_id, "name": "Tender with less than X(=3) bids"}
+    red_flag_dictionary = {"id": red_flag_id, "name": "Tenders with less than X(=3) bids"}
     red_flag_list.append(red_flag_dictionary)
     visualization_dictionary[red_flag_id] = {}
+    visualization_dictionary[red_flag_id]['is_image'] = True
     if fiscal_year_id not in fiscal_year_list:
         fiscal_year_list.append(fiscal_year_id)
     if fiscal_year_id not in fiscal_year_red_flag_dictionary:
@@ -792,11 +685,11 @@ for fiscal_year_id in red_flag_2_dictionary:
 
     # Reporting on red flag 2 using a spreadsheet
     data = list()
-    data.append(get_tender_field_list())
+    data.append(field_list_creator_object.get_tender_field_list([]))
 
     for tender_id in red_flag_2_dictionary[fiscal_year_id]["less_than_x_bids_set"]:
         tender_dictionary = fiscal_year_tender_dictionary[fiscal_year_id][tender_id]
-        data_list = get_tender_data_list(tender_dictionary)
+        data_list = field_list_creator_object.get_tender_data_list(tender_dictionary, [])
         data.append(data_list)
 
     spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
@@ -830,7 +723,7 @@ for fiscal_year_id in fiscal_year_dictionary:
 
 red_flag_4_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
-    red_flag_4_dictionary[fiscal_year_id] = {"same_email":0, "same_phone":0, "same_email_pair_set": set(), "same_phone_pair_set": set()}
+    red_flag_4_dictionary[fiscal_year_id] = {"same_email_count":0, "same_phone_count":0, "same_email_pair_set": set(), "same_phone_pair_set": set()}
     specific_supplying_entities = fiscal_year_supplying_entity_contact_dictionary[fiscal_year_id]
     for supplying_entity_id in specific_supplying_entities:
         for another_supplying_entity_id in specific_supplying_entities:
@@ -847,25 +740,26 @@ for fiscal_year_id in fiscal_year_dictionary:
                 if contact_name.lower()[:5] == "email":
                     email_address = supplying_entity_contacts[contact_key]["value"]
                 if contact_name.lower() == "phone":
-                    phone_number = supplying_entity_contacts[contact_key]["value"]
+                    phone = supplying_entity_contacts[contact_key]["value"]
             for contact_key in another_supplying_entity_contacts:
                 contact_name = another_supplying_entity_contacts[contact_key]["name"]
                 if contact_name.lower()[:5] == "email":
                     another_email_address = another_supplying_entity_contacts[contact_key]["value"]
                 if contact_name.lower() == "phone":
-                    another_phone_number = another_supplying_entity_contacts[contact_key]["value"]
+                    another_phone = another_supplying_entity_contacts[contact_key]["value"]
 
             if len(email_address) > 0 and email_address.strip() == another_email_address.strip():
-                red_flag_4_dictionary[fiscal_year_id]["same_email"] += 1
+                red_flag_4_dictionary[fiscal_year_id]["same_email_count"] += 1
                 red_flag_4_dictionary[fiscal_year_id]["same_email_pair_set"].add((supplying_entity_id, another_supplying_entity_id)) # set of tuples
             if len(phone) > 0 and phone.strip() == another_phone.strip():
-                red_flag_4_dictionary[fiscal_year_id]["same_phone"] += 1
+                red_flag_4_dictionary[fiscal_year_id]["same_phone_count"] += 1
                 red_flag_4_dictionary[fiscal_year_id]["same_phone_pair_set"].add((supplying_entity_id, another_supplying_entity_id))
 
     red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_4"
     red_flag_dictionary = {"id": red_flag_id, "name": "Supplying entities with a shared contact"}
     red_flag_list.append(red_flag_dictionary)
     visualization_dictionary[red_flag_id] = {}
+
     if fiscal_year_id not in fiscal_year_list:
         fiscal_year_list.append(fiscal_year_id)
     if fiscal_year_id not in fiscal_year_red_flag_dictionary:
@@ -875,17 +769,22 @@ for fiscal_year_id in fiscal_year_dictionary:
         fiscal_year_red_flag_dictionary[fiscal_year_id].append(red_flag_dictionary)
 
 
+
 for fiscal_year_id in red_flag_4_dictionary:
 
-    visualization_file_name = "data" + os.sep + "cached_generated_multimedia" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_4.jpg"
+    visualization_file_name = "data" + os.sep + "cached_generated_multimedia" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_4.html"
     spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_4.xlsx"
     red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_4"
     visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
+    visualization_dictionary[red_flag_id]['is_image'] = False
+
+    visualization_markup_object.set_file_name(visualization_file_name)
+    visualization_markup_object.get_red_flag_4_visual_markup(red_flag_4_dictionary[fiscal_year_id])
 
     # Reporting on red flag 2 using a spreadsheet
     data = list()
-    data.append(get_procurement_party_field_list())
+    data.append(field_list_creator_object.get_procurement_party_field_list([]))
     duplicate_email_tracking_set = set() # duplicates emails are being tracked based on the TIN
     duplicate_phone_tracking_set = set() # duplicate phones are also tracked here based on the TIN
 
@@ -893,6 +792,7 @@ for fiscal_year_id in red_flag_4_dictionary:
         entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][entity_id]
         same_email_tuple_list = red_flag_4_dictionary[fiscal_year_id]['same_email_pair_set']
         same_phone_tuple_list = red_flag_4_dictionary[fiscal_year_id]['same_phone_pair_set']
+
         for supplying_entity_tuple in same_email_tuple_list:
             if entity_id in supplying_entity_tuple:
                 another_entity_id = supplying_entity_tuple[1] if supplying_entity_tuple.index(entity_id) == 0 else supplying_entity_tuple[0]
@@ -901,11 +801,11 @@ for fiscal_year_id in red_flag_4_dictionary:
                 another_entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][another_entity_id]
                 another_ext_tin = another_entity_dictionary['ext_tin']
                 if entity_ext_tin not in duplicate_email_tracking_set:
-                    data_list_1 = get_party_data_list(entity_dictionary)
+                    data_list_1 = field_list_creator_object.get_party_data_list(entity_dictionary, [])
                     data.append(data_list_1)
                     duplicate_email_tracking_set.add(entity_ext_tin)
                 if another_ext_tin not in duplicate_email_tracking_set:
-                    data_list_2 = get_party_data_list(another_entity_dictionary)
+                    data_list_2 = field_list_creator_object.get_party_data_list(another_entity_dictionary, [])
                     data.append(data_list_2)
                     duplicate_email_tracking_set.add(another_ext_tin)
 
@@ -916,12 +816,12 @@ for fiscal_year_id in red_flag_4_dictionary:
                 entity_ext_tin = entity_dictionary['ext_tin']
                 another_entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][another_entity_id]
                 another_ext_tin = another_entity_dictionary['ext_tin']
-                if entity_ext_tin not in duplicate_phone_tracking_set and another_ext_tin not in duplicate_email_tracking_set:
-                    data_list_1 = get_party_data_list(entity_dictionary)
+                if entity_ext_tin not in duplicate_phone_tracking_set and entity_ext_tin not in duplicate_email_tracking_set:
+                    data_list_1 = field_list_creator_object.get_party_data_list(entity_dictionary, [])
                     data.append(data_list_1)
                     duplicate_phone_tracking_set.add(entity_ext_tin)
                 if another_ext_tin not in duplicate_phone_tracking_set and another_ext_tin not in duplicate_email_tracking_set:
-                    data_list_2 = get_party_data_list(another_entity_dictionary)
+                    data_list_2 = field_list_creator_object.get_party_data_list(another_entity_dictionary, [])
                     data.append(data_list_2)
                     duplicate_phone_tracking_set.add(another_ext_tin)
 
@@ -954,17 +854,82 @@ for fiscal_year_id in fiscal_year_dictionary:
 #             Get a particular fiscal year tenders
 #             for each and every tender bids and count them
 
+
+
 red_flag_6_dictionary = {}
+
 for fiscal_year_id in fiscal_year_dictionary:
-    red_flag_6_dictionary[fiscal_year_id] = {"with_one_bid":0, "more_than_one_bid":0, "with_one_bid_set":set(), "more_than_one_bids_set":set()}
+    red_flag_6_dictionary[fiscal_year_id] = {"less_than_x_bids":0, "more_than_x_bids":0, "less_than_x_bids_histogram":dict(), "less_than_x_bids_count_histogram":dict(), "more_than_x_bids_histogram":dict()}
+    with_less_than_x_bids_count_dictionary = {x:0 for x in range(1, 13)}
+    with_less_than_x_bids_set = set()
     specific_fiscal_year_tender_dictionary = fiscal_year_tender_dictionary[fiscal_year_id]
+
     for tender_id in specific_fiscal_year_tender_dictionary:
         if len(fiscal_year_tender_bid_dictionary[fiscal_year_id][tender_id]) == 1:
-            red_flag_6_dictionary[fiscal_year_id]["with_one_bid"] += 1
-            red_flag_6_dictionary[fiscal_year_id]["with_one_bid_set"].add(tender_id)
+            red_flag_6_dictionary[fiscal_year_id]["less_than_x_bids"] += 1
+            creation_date = specific_fiscal_year_tender_dictionary[tender_id]["tender_period_start_date"]
+
+            if isinstance(creation_date, str) and len(creation_date) > 0:
+                date_string = creation_date.replace("T", " ").split(".")[0]
+                creation_date_object = datetime.strptime(date_string, '%Y-%m-%d %H:%M:%S')
+                month_key = creation_date_object.strftime("%m")
+                with_less_than_x_bids_count_dictionary[int(month_key)] += 1
+                with_less_than_x_bids_set.add(tender_id)
+
         else:
-            red_flag_6_dictionary[fiscal_year_id]["more_than_one_bid"] += 1
-            #red_flag_6_dictionary[fiscal_year_id]["more_than_one_bids_set"].add(tender_id) # not of interest for now
+            red_flag_6_dictionary[fiscal_year_id]["more_than_x_bids"] += 1
+            #red_flag_2_dictionary[fiscal_year_id]["more_than_x_bids_histogram"].add(tender_id) # not of interest for now
+
+    red_flag_6_dictionary[fiscal_year_id]["less_than_x_bids_count_histogram"] = with_less_than_x_bids_count_dictionary
+    red_flag_6_dictionary[fiscal_year_id]["less_than_x_bids_set"] = with_less_than_x_bids_set
+
+    red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_6"
+    red_flag_dictionary = {"id": red_flag_id, "name": "Tenders with one bid"}
+    red_flag_list.append(red_flag_dictionary)
+    visualization_dictionary[red_flag_id] = {}
+    visualization_dictionary[red_flag_id]['is_image'] = True
+    if fiscal_year_id not in fiscal_year_list:
+        fiscal_year_list.append(fiscal_year_id)
+    if fiscal_year_id not in fiscal_year_red_flag_dictionary:
+        fiscal_year_red_flag_dictionary[fiscal_year_id] = list()
+        fiscal_year_red_flag_dictionary[fiscal_year_id].append(red_flag_dictionary)
+    else:
+        fiscal_year_red_flag_dictionary[fiscal_year_id].append(red_flag_dictionary)
+
+
+for fiscal_year_id in red_flag_6_dictionary:
+
+    visualization_file_name = "data" + os.sep + "cached_generated_multimedia" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_6.jpg"
+    spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_6.xlsx"
+    red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_6"
+    visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
+    visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
+
+    # visualizing red flag 2,  using a bar graph
+    title = fiscal_year_id.replace("/", "-")  + " fiscal year tenders with one bid"
+    value_dict = red_flag_6_dictionary[fiscal_year_id]["less_than_x_bids_count_histogram"]
+    bar_color = "#007700"
+    edge_color = "white"
+    x_axis_label = "Month"
+    y_axis_label = "Tenders"
+    width = 14
+    height = 7
+    save_path_and_name = visualization_file_name
+
+    bargraph_drawer_object = BarGraphDrawer(value_dict, bar_color, edge_color, x_axis_label, y_axis_label, title, width, height, save_path_and_name)
+    bargraph_drawer_object.draw_bar_graph()
+
+    # Reporting on red flag 2 using a spreadsheet
+    data = list()
+    data.append(field_list_creator_object.get_tender_field_list([]))
+
+    for tender_id in red_flag_6_dictionary[fiscal_year_id]["less_than_x_bids_set"]:
+        tender_dictionary = fiscal_year_tender_dictionary[fiscal_year_id][tender_id]
+        data_list = field_list_creator_object.get_tender_data_list(tender_dictionary, [])
+        data.append(data_list)
+
+    spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
+    spreadsheet_creator_object.create_spreadsheet()
 
 
 
@@ -974,15 +939,18 @@ for fiscal_year_id in fiscal_year_dictionary:
 #             For each and every supplier, get their awards and count them
 
 red_flag_7_dictionary = {}
-fiscal_year_supplying_entity_award_count_dicitionary = {}
+fiscal_year_supplying_entity_award_count_dictionary = {}
+top_x_winners_configuration = 10
+top_x_winners_in_y_years_configuration = 5
+
 for fiscal_year_id in fiscal_year_dictionary:
-    fiscal_year_supplying_entity_award_count_dicitionary[fiscal_year_id] = {}
+    fiscal_year_supplying_entity_award_count_dictionary[fiscal_year_id] = {}
     specific_supplying_entity_awards = fiscal_year_supplying_entity_award_dictionary[fiscal_year_id]
     for supplying_entity_id in specific_supplying_entity_awards:
-        fiscal_year_supplying_entity_award_count_dicitionary[fiscal_year_id][supplying_entity_id] = len(fiscal_year_supplying_entity_award_dictionary[fiscal_year_id][supplying_entity_id])
+        fiscal_year_supplying_entity_award_count_dictionary[fiscal_year_id][supplying_entity_id] = len(fiscal_year_supplying_entity_award_dictionary[fiscal_year_id][supplying_entity_id])
 
     red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_7"
-    red_flag_dictionary = {"id": red_flag_id, "name": "Supplying entities with the most awards in the last X(=5) years"}
+    red_flag_dictionary = {"id": red_flag_id, "name": "Top " + str(top_x_winners_configuration) + " supplying entities with the most awards in the last " + str(top_x_winners_in_y_years_configuration) + " years"}
     red_flag_list.append(red_flag_dictionary)
     visualization_dictionary[red_flag_id] = {}
     if fiscal_year_id not in fiscal_year_list:
@@ -994,25 +962,31 @@ for fiscal_year_id in fiscal_year_dictionary:
         fiscal_year_red_flag_dictionary[fiscal_year_id].append(red_flag_dictionary)
 
 for fiscal_year_id in fiscal_year_dictionary:
-    year_supplying_entity_award_count_dictionary = fiscal_year_supplying_entity_award_count_dicitionary[fiscal_year_id]
+    year_supplying_entity_award_count_dictionary = fiscal_year_supplying_entity_award_count_dictionary[fiscal_year_id]
     red_flag_7_dictionary[fiscal_year_id] = dict(sorted(year_supplying_entity_award_count_dictionary.items(), key=lambda item: item[1], reverse=True)) # sorting by value in desc order
 
 
-for fiscal_year_id in red_flag_4_dictionary:
+for fiscal_year_id in red_flag_7_dictionary:
 
     visualization_file_name = "data" + os.sep + "cached_generated_multimedia" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_7.jpg"
     spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_7.xlsx"
     red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_7"
     visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
+    visualization_dictionary[red_flag_id]['is_image'] = True
 
     data = list()
-    data.append(get_procurement_party_field_list())
+    data.append(field_list_creator_object.get_procurement_party_field_list(["bids won"]))
 
-    for entity_id in fiscal_year_supplying_entity_dictionary[fiscal_year_id]:
+    count = 0
+    for entity_id in red_flag_7_dictionary[fiscal_year_id]:
+        if count >= top_x_winners_configuration:
+            break
         entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][entity_id]
-        data_list = get_party_data_list(entity_dictionary)
+        award_count = red_flag_7_dictionary[fiscal_year_id][entity_id]
+        data_list = field_list_creator_object.get_party_data_list(entity_dictionary, [award_count])
         data.append(data_list)
+        count += 1
 
     spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
     spreadsheet_creator_object.create_spreadsheet()
@@ -1057,15 +1031,16 @@ spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + 
 red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_8"
 visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
 visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
+visualization_dictionary[red_flag_id]['is_image'] = False
 
 for supplying_entity_id in red_flag_8_set:
 
     data = list()
-    data.append(get_procurement_party_field_list())
+    data.append(field_list_creator_object.get_procurement_party_field_list([]))
 
     for entity_id in fiscal_year_supplying_entity_dictionary[fiscal_year_id]:
         entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][entity_id]
-        data_list = get_party_data_list(entity_dictionary)
+        data_list = field_list_creator_object.get_party_data_list(entity_dictionary, [])
         data.append(data_list)
 
 spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
@@ -1123,13 +1098,14 @@ for fiscal_year_id in red_flag_10_dictionary:
     red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_10"
     visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
+    visualization_dictionary[red_flag_id]['is_image'] = False
 
     data = list()
-    data.append(get_procurement_party_field_list())
+    data.append(field_list_creator_object.get_procurement_party_field_list([]))
 
     for entity_id in red_flag_10_dictionary[fiscal_year_id]:
         entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][entity_id]
-        data_list = get_party_data_list(entity_dictionary)
+        data_list = field_list_creator_object.get_party_data_list(entity_dictionary, [])
         data.append(data_list)
 
     spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
@@ -1182,9 +1158,10 @@ for fiscal_year_id in red_flag_10_dictionary:
     red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_11"
     visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
+    visualization_dictionary[red_flag_id]['is_image'] = False
 
     data = list()
-    data.append(get_procurement_party_field_list())
+    data.append(field_list_creator_object.get_procurement_party_field_list([]))
 
     for entity_id in fiscal_year_procuring_entity_dictionary[fiscal_year_id]:
         if red_flag_11_dictionary[fiscal_year_id]["late_submission_count"] == 0:
@@ -1192,7 +1169,7 @@ for fiscal_year_id in red_flag_10_dictionary:
         if entity_id not in red_flag_11_dictionary[fiscal_year_id]["late_submission_set"]:
             continue
         entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id][entity_id]
-        data_list = get_party_data_list(entity_dictionary)
+        data_list = field_list_creator_object.get_party_data_list(entity_dictionary, [])
         data.append(data_list)
 
     spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
