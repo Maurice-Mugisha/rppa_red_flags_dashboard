@@ -48,41 +48,10 @@ def get_specific_party_fiscal_year_plans(selection_object, query_executor, fisca
 	result_dictionary = cursor.fetchall()
 	for row in result_dictionary:
 		plan_id = row['id']
-		plan_dictionary = {}
-		plan_dictionary['id'] = row['id']
-		plan_dictionary['language'] = row['language']
-		plan_dictionary['rationale'] = row['rationale']
-		plan_dictionary['budget_id'] = row['budget_id']
-		plan_dictionary['budget_description'] = row['budget_description']
-		plan_dictionary['budget_project'] = row['budget_project']
-		plan_dictionary['budget_project_id'] = row['budget_project_id']
-		plan_dictionary['budget_amount'] = row['budget_amount']
-		plan_dictionary['budget_currency'] = row['budget_currency']
-		plan_dictionary['budget_uri'] = row['budget_uri']
-		plan_dictionary['ext_contract_period_code'] = row['ext_contract_period_code']
-		plan_dictionary['ext_pe_code'] = row['ext_pe_code']
-		plan_dictionary['ext_fiscal_year'] = row['ext_fiscal_year']
-		plan_dictionary['ext_tender_type_code'] = row['ext_tender_type_code']
-		plan_dictionary['ext_tender_method_code'] = row['ext_tender_method_code']
-		plan_dictionary['ext_mod_date'] = row['ext_mod_date']
-		plan_dictionary['ext_revw_serno'] = row['ext_revw_serno']
-		plan_dictionary['ext_other_info_content'] = row['ext_other_info_content']
-		plan_dictionary['is_test_data'] = row['is_test_data']
-		plan_dictionary['legacy_id'] = row['legacy_id']
-		plan_dictionary['version'] = row['version']
-		plan_dictionary['hash'] = row['hash']
-		plan_dictionary['created_at'] = row['created_at']
+		plan_dictionary = get_plan_dictionary(row)
 		# RPPA specific
 		plan_dictionary['submission_date_and_time'] = row['created_at']
 		# end of RPPA specific data
-		plan_dictionary['deleted_at'] = row['deleted_at']
-		plan_dictionary['updated_at'] = row['updated_at']
-		plan_dictionary['status'] = row['status']
-		plan_dictionary['ext_pay_pe_code'] = row['ext_pay_pe_code']
-		plan_dictionary['ext_highest_amount'] = row['ext_highest_amount']
-		plan_dictionary['ext_highest_donor'] = row['ext_highest_donor']
-		plan_dictionary['ext_highest_bgt_line'] = row['ext_highest_bgt_line']
-
 		planning_dictionary[plan_id] = plan_dictionary
 
 	return planning_dictionary
@@ -98,40 +67,47 @@ def get_specific_plan(selection_object, query_executor, plan_id):
 
 	for row in result_dictionary:
 		plan_id = row['id']
-		plan_dictionary = {}
-		plan_dictionary['id'] = row['id']
-		plan_dictionary['language'] = row['language']
-		plan_dictionary['rationale'] = row['rationale']
-		plan_dictionary['budget_id'] = row['budget_id']
-		plan_dictionary['budget_description'] = row['budget_description']
-		plan_dictionary['budget_project'] = row['budget_project']
-		plan_dictionary['budget_project_id'] = row['budget_project_id']
-		plan_dictionary['budget_amount'] = row['budget_amount']
-		plan_dictionary['budget_currency'] = row['budget_currency']
-		plan_dictionary['budget_uri'] = row['budget_uri']
-		plan_dictionary['ext_contract_period_code'] = row['ext_contract_period_code']
-		plan_dictionary['ext_pe_code'] = row['ext_pe_code']
-		plan_dictionary['ext_fiscal_year'] = row['ext_fiscal_year']
-		plan_dictionary['ext_tender_type_code'] = row['ext_tender_type_code']
-		plan_dictionary['ext_tender_method_code'] = row['ext_tender_method_code']
-		plan_dictionary['ext_mod_date'] = row['ext_mod_date']
-		plan_dictionary['ext_revw_serno'] = row['ext_revw_serno']
-		plan_dictionary['ext_other_info_content'] = row['ext_other_info_content']
-		plan_dictionary['is_test_data'] = row['is_test_data']
-		plan_dictionary['legacy_id'] = row['legacy_id']
-		plan_dictionary['version'] = row['version']
-		plan_dictionary['hash'] = row['hash']
-		plan_dictionary['created_at'] = row['created_at']
-		plan_dictionary['deleted_at'] = row['deleted_at']
-		plan_dictionary['updated_at'] = row['updated_at']
-		plan_dictionary['status'] = row['status']
-		plan_dictionary['ext_pay_pe_code'] = row['ext_pay_pe_code']
-		plan_dictionary['ext_highest_amount'] = row['ext_highest_amount']
-		plan_dictionary['ext_highest_donor'] = row['ext_highest_donor']
-		plan_dictionary['ext_highest_bgt_line'] = row['ext_highest_bgt_line']
+		plan_dictionary = get_plan_dictionary(row)
 		planning_dictionary[plan_id] = plan_dictionary
 
 	return plan_dictionary
+
+
+def get_plan_dictionary(row):
+	plan_dictionary = {}
+	plan_dictionary['id'] = row['id']
+	plan_dictionary['language'] = row['language']
+	plan_dictionary['rationale'] = row['rationale']
+	plan_dictionary['budget_id'] = row['budget_id']
+	plan_dictionary['budget_description'] = row['budget_description']
+	plan_dictionary['budget_project'] = row['budget_project']
+	plan_dictionary['budget_project_id'] = row['budget_project_id']
+	plan_dictionary['budget_amount'] = row['budget_amount']
+	plan_dictionary['budget_currency'] = row['budget_currency']
+	plan_dictionary['budget_uri'] = row['budget_uri']
+	plan_dictionary['ext_contract_period_code'] = row['ext_contract_period_code']
+	plan_dictionary['ext_pe_code'] = row['ext_pe_code']
+	plan_dictionary['ext_fiscal_year'] = row['ext_fiscal_year']
+	plan_dictionary['ext_tender_type_code'] = row['ext_tender_type_code']
+	plan_dictionary['ext_tender_method_code'] = row['ext_tender_method_code']
+	plan_dictionary['ext_mod_date'] = row['ext_mod_date']
+	plan_dictionary['ext_revw_serno'] = row['ext_revw_serno']
+	plan_dictionary['ext_other_info_content'] = row['ext_other_info_content']
+	plan_dictionary['is_test_data'] = row['is_test_data']
+	plan_dictionary['legacy_id'] = row['legacy_id']
+	plan_dictionary['version'] = row['version']
+	plan_dictionary['hash'] = row['hash']
+	plan_dictionary['created_at'] = row['created_at']
+	plan_dictionary['deleted_at'] = row['deleted_at']
+	plan_dictionary['updated_at'] = row['updated_at']
+	plan_dictionary['status'] = row['status']
+	plan_dictionary['ext_pay_pe_code'] = row['ext_pay_pe_code']
+	plan_dictionary['ext_highest_amount'] = row['ext_highest_amount']
+	plan_dictionary['ext_highest_donor'] = row['ext_highest_donor']
+	plan_dictionary['ext_highest_bgt_line'] = row['ext_highest_bgt_line']
+
+	return plan_dictionary
+
 
 
 def get_procurement_actor(selection_object, query_executor, party):
@@ -143,36 +119,7 @@ def get_procurement_actor(selection_object, query_executor, party):
 
 	for row in result_dictionary:
 		party_id = row['id']
-		actor_dictionary = {}
-		actor_dictionary['id'] = party_id
-		actor_dictionary['name'] = row['name']
-		actor_dictionary['roles'] = row['roles']
-		actor_dictionary['identifier_scheme'] = row['identifier_scheme']
-		actor_dictionary['identifier_id'] = row['identifier_id']
-		actor_dictionary['identifier_legal_name'] = row['identifier_legal_name']
-		actor_dictionary['address_street'] = row['address_street']
-		actor_dictionary['address_locality'] = row['address_locality']
-		actor_dictionary['address_region'] = row['address_region']
-		actor_dictionary['address_postal_code'] = row['address_postal_code']
-		actor_dictionary['address_country_name'] = row['address_country_name']
-		actor_dictionary['contact_point_name'] = row['contact_point_name']
-		actor_dictionary['contact_point_email'] = row['contact_point_email']
-		actor_dictionary['contact_point_telephone'] = row['contact_point_telephone']
-		actor_dictionary['contact_point_fax_number'] = row['contact_point_fax_number']
-		actor_dictionary['contact_point_url'] = row['contact_point_url']
-		actor_dictionary['contact_person_nat_id'] = row['contact_person_nat_id']
-		actor_dictionary['contact_person_nationality'] = row['contact_person_nationality']
-		actor_dictionary['ext_bank_name'] = row['ext_bank_name']
-		actor_dictionary['ext_bank_code'] = row['ext_bank_code']
-		actor_dictionary['ext_tin'] = row['ext_tin']
-		actor_dictionary['ext_mod_date'] = row['ext_mod_date']
-		actor_dictionary['legacy_id'] = row['legacy_id']
-		actor_dictionary['version'] = row['version']
-		actor_dictionary['hash'] = row['hash']
-		actor_dictionary['created_at'] = row['created_at']
-		actor_dictionary['deleted_at'] = row['deleted_at']
-		actor_dictionary['updated_at'] = row['updated_at']
-		actor_dictionary['status'] = row['status']
+		actor_dictionary = get_procurement_actor_dictionary(row)
 		procurement_actor_dictionary[party_id] = actor_dictionary
 
 	return procurement_actor_dictionary
@@ -188,39 +135,47 @@ def get_fiscal_year_supplying_entity(selection_object, query_executor, party, fi
 
 	for row in result_dictionary:
 		party_id = row['id']
-		actor_dictionary = {}
-		actor_dictionary['id'] = party_id
-		actor_dictionary['name'] = row['name']
-		actor_dictionary['roles'] = row['roles']
-		actor_dictionary['identifier_scheme'] = row['identifier_scheme']
-		actor_dictionary['identifier_id'] = row['identifier_id']
-		actor_dictionary['identifier_legal_name'] = row['identifier_legal_name']
-		actor_dictionary['address_street'] = row['address_street']
-		actor_dictionary['address_locality'] = row['address_locality']
-		actor_dictionary['address_region'] = row['address_region']
-		actor_dictionary['address_postal_code'] = row['address_postal_code']
-		actor_dictionary['address_country_name'] = row['address_country_name']
-		actor_dictionary['contact_point_name'] = row['contact_point_name']
-		actor_dictionary['contact_point_email'] = row['contact_point_email']
-		actor_dictionary['contact_point_telephone'] = row['contact_point_telephone']
-		actor_dictionary['contact_point_fax_number'] = row['contact_point_fax_number']
-		actor_dictionary['contact_point_url'] = row['contact_point_url']
-		actor_dictionary['contact_person_nat_id'] = row['contact_person_nat_id']
-		actor_dictionary['contact_person_nationality'] = row['contact_person_nationality']
-		actor_dictionary['ext_bank_name'] = row['ext_bank_name']
-		actor_dictionary['ext_bank_code'] = row['ext_bank_code']
-		actor_dictionary['ext_tin'] = row['ext_tin']
-		actor_dictionary['ext_mod_date'] = row['ext_mod_date']
-		actor_dictionary['legacy_id'] = row['legacy_id']
-		actor_dictionary['version'] = row['version']
-		actor_dictionary['hash'] = row['hash']
-		actor_dictionary['created_at'] = row['created_at']
-		actor_dictionary['deleted_at'] = row['deleted_at']
-		actor_dictionary['updated_at'] = row['updated_at']
-		actor_dictionary['status'] = row['status']
+		actor_dictionary = get_procurement_actor_dictionary(row)
 		procurement_actor_dictionary[party_id] = actor_dictionary
 
 	return procurement_actor_dictionary
+
+
+
+def get_procurement_actor_dictionary(row):
+
+	actor_dictionary = {}
+	actor_dictionary['id'] = row['id']
+	actor_dictionary['name'] = row['name']
+	actor_dictionary['roles'] = row['roles']
+	actor_dictionary['identifier_scheme'] = row['identifier_scheme']
+	actor_dictionary['identifier_id'] = row['identifier_id']
+	actor_dictionary['identifier_legal_name'] = row['identifier_legal_name']
+	actor_dictionary['address_street'] = row['address_street']
+	actor_dictionary['address_locality'] = row['address_locality']
+	actor_dictionary['address_region'] = row['address_region']
+	actor_dictionary['address_postal_code'] = row['address_postal_code']
+	actor_dictionary['address_country_name'] = row['address_country_name']
+	actor_dictionary['contact_point_name'] = row['contact_point_name']
+	actor_dictionary['contact_point_email'] = row['contact_point_email']
+	actor_dictionary['contact_point_telephone'] = row['contact_point_telephone']
+	actor_dictionary['contact_point_fax_number'] = row['contact_point_fax_number']
+	actor_dictionary['contact_point_url'] = row['contact_point_url']
+	actor_dictionary['contact_person_nat_id'] = row['contact_person_nat_id']
+	actor_dictionary['contact_person_nationality'] = row['contact_person_nationality']
+	actor_dictionary['ext_bank_name'] = row['ext_bank_name']
+	actor_dictionary['ext_bank_code'] = row['ext_bank_code']
+	actor_dictionary['ext_tin'] = row['ext_tin']
+	actor_dictionary['ext_mod_date'] = row['ext_mod_date']
+	actor_dictionary['legacy_id'] = row['legacy_id']
+	actor_dictionary['version'] = row['version']
+	actor_dictionary['hash'] = row['hash']
+	actor_dictionary['created_at'] = row['created_at']
+	actor_dictionary['deleted_at'] = row['deleted_at']
+	actor_dictionary['updated_at'] = row['updated_at']
+	actor_dictionary['status'] = row['status']
+
+	return actor_dictionary
 
 
 
@@ -288,6 +243,8 @@ def get_tender_dictionary(row):
 	tender_dictionary['status'] = row['status']
 
 	return tender_dictionary
+
+
 
 def get_tender_bidders(selection_object, query_executor, tender_id):
 	bidder_dictionary = {}
@@ -362,7 +319,38 @@ def get_fiscal_year_procuring_entity_awards(selection_object, query_executor, fi
 	result_dictionary = cursor.fetchall()
 	for row in result_dictionary:
 		award_id = row['id']
-		award_dictionary[award_id] = row
+		award_dictionary[award_id] = get_award_dictionary(row)
+	return award_dictionary
+
+
+def get_award_dictionary(row):
+	award_dictionary = {}
+	award_dictionary['id'] = row['id']
+	award_dictionary['language'] = row['language']
+	award_dictionary['title'] = row['title']
+	award_dictionary['description'] = row['description']
+	award_dictionary['award_status'] = row['award_status']
+	award_dictionary['date'] = row['date']
+	award_dictionary['value_amount'] = row['value_amount']
+	award_dictionary['value_currency'] = row['value_currency']
+	award_dictionary['ext_lot_number'] = row['ext_lot_number']
+	award_dictionary['ext_tin'] = row['ext_tin']
+	award_dictionary['ext_planning_reference_number'] = row['ext_planning_reference_number']
+	award_dictionary['ext_pe_code'] = row['ext_pe_code']
+	award_dictionary['ext_tender_reference_number'] = row['ext_tender_reference_number']
+	award_dictionary['ext_fiscal_year'] = row['ext_fiscal_year']
+	award_dictionary['ext_tender_type_code'] = row['ext_tender_type_code']
+	award_dictionary['ext_tender_method_code'] = row['ext_tender_method_code']
+	award_dictionary['ext_mod_date'] = row['ext_mod_date']
+	award_dictionary['legacy_id'] = row['legacy_id']
+	award_dictionary['is_test_data'] = row['is_test_data']
+	award_dictionary['version'] = row['version']
+	award_dictionary['hash'] = row['hash']
+	award_dictionary['created_at'] = row['created_at']
+	award_dictionary['deleted_at'] = row['deleted_at']
+	award_dictionary['updated_at'] = row['updated_at']
+	award_dictionary['status'] = row['status']
+
 	return award_dictionary
 
 
@@ -372,8 +360,8 @@ def get_specific_award_supplying_entities(selection_object, query_executor, awar
 		cursor.execute(selection_object.select_award_supplying_entity(award_id))
 		result_dictionary = cursor.fetchall()
 		for row in result_dictionary:
-			supplying_entity_id = row['id']
-			supplying_entity_dictionary[supplying_entity_id] = row
+			supplying_entity_id = row['ext_tin']
+			supplying_entity_dictionary[supplying_entity_id] = get_procurement_actor_dictionary(row)
 		return supplying_entity_dictionary
 
 

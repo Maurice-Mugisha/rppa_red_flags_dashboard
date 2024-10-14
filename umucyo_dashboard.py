@@ -421,7 +421,8 @@ for fiscal_year_id in fiscal_year_dictionary:
         fiscal_year_procuring_entity_award_dictionary[fiscal_year_id] = json.loads(serialization_deserialization_object.deserialize_from_json())
     else:
         for procuring_entity_id in fiscal_year_procuring_entity_dictionary[fiscal_year_id]:
-            fiscal_year_procuring_entity_award_dictionary[fiscal_year_id][procuring_entity_id] = get_fiscal_year_procuring_entity_awards(selection_object, query_executor, fiscal_year_id, procuring_entity_id)
+            ext_pe_code = fiscal_year_procuring_entity_dictionary[fiscal_year_id][procuring_entity_id]['legacy_id']
+            fiscal_year_procuring_entity_award_dictionary[fiscal_year_id][procuring_entity_id] = get_fiscal_year_procuring_entity_awards(selection_object, query_executor, fiscal_year_id, ext_pe_code)
         if len(fiscal_year_award_dictionary[fiscal_year_id]) > 0:
             serialization_deserialization_object.set_serialization_data(fiscal_year_procuring_entity_award_dictionary[fiscal_year_id])
             serialization_deserialization_object.serialize_in_json()
@@ -450,19 +451,41 @@ for fiscal_year_id in fiscal_year_procuring_entity_award_dictionary:
     for procuring_entity_id in fiscal_year_procuring_entity_award_dictionary[fiscal_year_id]:
         fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id] = {}
         specific_procuring_entity_awards = fiscal_year_procuring_entity_award_dictionary[fiscal_year_id][procuring_entity_id]
-        for award_id in specific_procuring_entity_awards:
-            specific_award_supplying_entities = get_specific_award_supplying_entities(selection_object, query_executor, award_id)
-            for supplying_entity_id in specific_award_supplying_entities:
-                if supplying_entity_id in fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id]:
-                    fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id].add(award_id)
-                    direct_contract_count = len(fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id])
+        if len(specific_procuring_entity_awards) == 0:
+            continue
 
-                    if direct_contract_count > cndc and direct_contract_count < (cndc + 2):
-                        red_flag_9_dictionary[fiscal_year_id]["count"] += 1
-                        red_flag_9_dictionary[fiscal_year_id]["set"].add((procuring_entity_id, supplying_entity_id))
+        for award_id in specific_procuring_entity_awards:
+            award_ext_tender_method_code = specific_procuring_entity_awards[award_id]['ext_tender_method_code']
+            award_ext_pe_code = specific_procuring_entity_awards[award_id]['ext_pe_code']
+            award_legacy_id = specific_procuring_entity_awards[award_id]['legacy_id']
+            supplier_award_tuple = (award_legacy_id, award_ext_tender_method_code, award_ext_pe_code)
+            specific_award_supplying_entities = get_specific_award_supplying_entities(selection_object, query_executor, award_legacy_id)
+
+            direct_count_dictionary = {}
+            for supplying_entity_id in specific_award_supplying_entities:
+
+                if supplying_entity_id in fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id]:
+                    fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id].add(supplier_award_tuple)
+                    supplier_awards_tuple_list = fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id]
+
+                    for _ , method , buyer in supplier_awards_tuple_list:
+                        if buyer not in direct_count_dictionary:
+                            direct_count_dictionary[buyer] = 0
+                        if method.lower() == "direct":
+                            direct_count_dictionary[buyer] += 1
+                        else:
+                            continue
+
+                        direct_contract_count = direct_count_dictionary[buyer]
+
+                        if direct_count_dictionary[buyer] >= cndc:
+                            red_flag_9_dictionary[fiscal_year_id]["count"] += 1
+                            procuring_entity_tin = fiscal_year_procuring_entity_dictionary[fiscal_year_id][procuring_entity_id]['ext_tin']
+                            red_flag_9_dictionary[fiscal_year_id]["set"].add((procuring_entity_id, procuring_entity_tin, supplying_entity_id))
+
                 else:
                     fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id] = set()
-                    fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id].add(award_id)
+                    fiscal_year_procuring_entity_supplying_entity_award_dictionary[fiscal_year_id][procuring_entity_id][supplying_entity_id].add(supplier_award_tuple)
 
     if len(red_flag_9_dictionary[fiscal_year_id]) > 0:
         serialization_deserialization_object.set_serialization_data(red_flag_9_dictionary[fiscal_year_id])
@@ -1053,6 +1076,20 @@ spreadsheet_creator_object.create_spreadsheet()
 #             Get each and every procuring entity's "direct contract awards"
 #             For each and every supplier, get their direct contracts and count them, check if direct contracts exceed the configuration of 2 (sound the alarm if yes)
 
+
+red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_9"
+red_flag_dictionary = {"id": red_flag_id, "name": "Bidders who have received more than two direct bidding contracts from one procuring entity"}
+red_flag_list.append(red_flag_dictionary)
+visualization_dictionary[red_flag_id] = {}
+if fiscal_year_id not in fiscal_year_list:
+    fiscal_year_list.append(fiscal_year_id)
+if fiscal_year_id not in fiscal_year_red_flag_dictionary:
+    fiscal_year_red_flag_dictionary[fiscal_year_id] = list()
+    fiscal_year_red_flag_dictionary[fiscal_year_id].append(red_flag_dictionary)
+else:
+    fiscal_year_red_flag_dictionary[fiscal_year_id].append(red_flag_dictionary)
+
+
 red_flag_9_label_count_dictionary = {}
 red_flag_9_report_data_dictionary = {}
 for fiscal_year_id in fiscal_year_dictionary:
@@ -1060,6 +1097,33 @@ for fiscal_year_id in fiscal_year_dictionary:
     fiscal_year_label = fiscal_year_dictionary[fiscal_year_id]["start_date"][:4] + " - " + fiscal_year_dictionary[fiscal_year_id]["end_date"][:4]
     red_flag_9_label_count_dictionary[fiscal_year_label] = red_flag_9_dictionary[fiscal_year_id]["count"]
     red_flag_9_report_data_dictionary[fiscal_year_label] = red_flag_9_dictionary[fiscal_year_id]["set"]
+
+    visualization_file_name = "data" + os.sep + "cached_generated_multimedia" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_9.html"
+    spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_9.xlsx"
+    red_flag_id = fiscal_year_id.replace("/", "") + "red_flag_9"
+    visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
+    visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
+    visualization_dictionary[red_flag_id]['is_image'] = False
+
+    visualization_markup_object.set_file_name(visualization_file_name)
+    #visualization_markup_object.get_red_flag_9_visual_markup(red_flag_9_report_data_dictionary[fiscal_year_id])
+
+    data = list()
+    data.append(field_list_creator_object.get_procurement_party_field_list(["Procuring entity tin", "Procuring entity name"]))
+
+    for procuring_entity_id, procuring_entity_tin, supplying_entity_tin in red_flag_9_dictionary[fiscal_year_id]["set"]:
+        supplying_entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][supplying_entity_tin]
+        procuring_entity_dictionary = fiscal_year_procuring_entity_dictionary[fiscal_year_id][procuring_entity_id]
+        procuring_entity_name = procuring_entity_dictionary['name']
+        data_list = field_list_creator_object.get_party_data_list(supplying_entity_dictionary, [procuring_entity_tin, procuring_entity_name])
+        data.append(data_list)
+
+    spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
+    spreadsheet_creator_object.create_spreadsheet()
+
+
+
+
 
 
 

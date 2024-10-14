@@ -92,8 +92,8 @@ class Select:
 		query = "SELECT * FROM award WHERE ext_fiscal_year = '" + fiscal_year_id + "' AND ext_pe_code = '" + party_id + "';"
 		return query
 
-	def select_award_supplying_entity(self, fiscal_year_id, award_id):
-		query = "SELECT party.* FROM party, award WHERE party.ext_tin = award.ext_tin AND award_id = '" + award_id + "';"
+	def select_award_supplying_entity(self, award_id):
+		query = "SELECT party.*, award.ext_pe_code, award.legacy_id AS award_id, award.ext_tender_method_code FROM party, award WHERE party.ext_tin = award.ext_tin AND award.legacy_id = '" + award_id + "';" # award_legacy_id
 		return query
 
 	def select_tender_award(self, tender_id):
