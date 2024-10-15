@@ -699,8 +699,8 @@ for fiscal_year_id in red_flag_2_dictionary:
     edge_color = "white"
     x_axis_label = "Month"
     y_axis_label = "Tenders"
-    width = 14
-    height = 7
+    width = 15
+    height = 8
     save_path_and_name = visualization_file_name
 
     bargraph_drawer_object = BarGraphDrawer(value_dict, bar_color, edge_color, x_axis_label, y_axis_label, title, width, height, save_path_and_name)
@@ -802,8 +802,6 @@ for fiscal_year_id in red_flag_4_dictionary:
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
     visualization_dictionary[red_flag_id]['is_image'] = False
 
-    visualization_markup_object.set_file_name(visualization_file_name)
-    visualization_markup_object.get_red_flag_4_visual_markup(red_flag_4_dictionary[fiscal_year_id])
 
     # Reporting on red flag 2 using a spreadsheet
     data = list()
@@ -850,6 +848,11 @@ for fiscal_year_id in red_flag_4_dictionary:
 
     spreadsheet_creator_object = SpreadsheetCreator(spreadsheet_file_name, data)
     spreadsheet_creator_object.create_spreadsheet()
+
+    visualization_markup_object.set_file_name(visualization_file_name)
+    visualization_markup_object.get_red_flag_4_visual_markup(red_flag_4_dictionary[fiscal_year_id])
+    table_title = "Supplying entities with a shared contact"
+    visualization_markup_object.tabulate_red_flag_data(table_title, data)
 
 
 
@@ -998,6 +1001,27 @@ for fiscal_year_id in red_flag_7_dictionary:
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
     visualization_dictionary[red_flag_id]['is_image'] = True
 
+    top = 10
+    count = 0
+    y_data_seq = []
+    x_data_seq = []
+    for k in red_flag_7_dictionary[fiscal_year_id]:
+        if count == top:
+            break
+        name = fiscal_year_supplying_entity_dictionary[fiscal_year_id][k]['name'][:15] + " (" + fiscal_year_supplying_entity_dictionary[fiscal_year_id][k]['ext_tin'] + ")"
+        y_data_seq.append(name)
+        x_data_seq.append(red_flag_7_dictionary[fiscal_year_id][k])
+        count += 1
+    y_data_seq.reverse()
+    x_data_seq.reverse()
+
+
+    y_label = "Procuring entity"
+    x_label = "Tenders"
+    title = "Tender wins"
+    horizontal_bar_graph = HorizontalBarGraph(y_data_seq, x_data_seq, y_label, x_label, title, visualization_file_name)
+    horizontal_bar_graph.draw_horizontal_bar_graph()
+
     data = list()
     data.append(field_list_creator_object.get_procurement_party_field_list(["bids won"]))
 
@@ -1056,13 +1080,15 @@ visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file
 visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
 visualization_dictionary[red_flag_id]['is_image'] = False
 
+visualization_markup_object.set_file_name(visualization_file_name)
+visualization_markup_object.get_red_flag_9_visual_markup({"Had never bid before but win a tender": len(red_flag_8_set)})
+
+data = list()
+data.append(field_list_creator_object.get_procurement_party_field_list([]))
+
 for supplying_entity_id in red_flag_8_set:
-
-    data = list()
-    data.append(field_list_creator_object.get_procurement_party_field_list([]))
-
-    for entity_id in fiscal_year_supplying_entity_dictionary[fiscal_year_id]:
-        entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][entity_id]
+    if supplying_entity_id in fiscal_year_supplying_entity_dictionary[fiscal_year_id]:
+        entity_dictionary = fiscal_year_supplying_entity_dictionary[fiscal_year_id][supplying_entity_id]
         data_list = field_list_creator_object.get_party_data_list(entity_dictionary, [])
         data.append(data_list)
 
@@ -1106,7 +1132,7 @@ for fiscal_year_id in fiscal_year_dictionary:
     visualization_dictionary[red_flag_id]['is_image'] = False
 
     visualization_markup_object.set_file_name(visualization_file_name)
-    #visualization_markup_object.get_red_flag_9_visual_markup(red_flag_9_report_data_dictionary[fiscal_year_id])
+    visualization_markup_object.get_red_flag_9_visual_markup({"more than two direct contracts": red_flag_9_dictionary[fiscal_year_id]["count"]})
 
     data = list()
     data.append(field_list_creator_object.get_procurement_party_field_list(["Procuring entity tin", "Procuring entity name"]))
@@ -1164,6 +1190,9 @@ for fiscal_year_id in red_flag_10_dictionary:
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
     visualization_dictionary[red_flag_id]['is_image'] = False
 
+    visualization_markup_object.set_file_name(visualization_file_name)
+    visualization_markup_object.get_red_flag_9_visual_markup({"Always bid and win": len(red_flag_10_dictionary[fiscal_year_id])})
+
     data = list()
     data.append(field_list_creator_object.get_procurement_party_field_list([]))
 
@@ -1215,7 +1244,7 @@ for fiscal_year_id in fiscal_year_dictionary:
         fiscal_year_red_flag_dictionary[fiscal_year_id].append(red_flag_dictionary)
 
 
-for fiscal_year_id in red_flag_10_dictionary:
+for fiscal_year_id in red_flag_11_dictionary:
 
     visualization_file_name = "data" + os.sep + "cached_generated_multimedia" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_11.jpg"
     spreadsheet_file_name = "data" + os.sep + "cached_generated_reports" + os.sep + fiscal_year_id.replace("/", "-") + os.sep + "red_flag_11.xlsx"
@@ -1223,6 +1252,9 @@ for fiscal_year_id in red_flag_10_dictionary:
     visualization_dictionary[red_flag_id]["visualization_link"] = visualization_file_name
     visualization_dictionary[red_flag_id]["report_link"] = spreadsheet_file_name
     visualization_dictionary[red_flag_id]['is_image'] = False
+
+    visualization_markup_object.set_file_name(visualization_file_name)
+    visualization_markup_object.get_red_flag_9_visual_markup({"Have a late submission plan": red_flag_11_dictionary[fiscal_year_id]["late_submission_count"]})
 
     data = list()
     data.append(field_list_creator_object.get_procurement_party_field_list([]))

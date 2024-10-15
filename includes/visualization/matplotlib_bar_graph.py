@@ -68,6 +68,28 @@ class MultiDimensionalBarGraphDrawer:
 
 
 
+class HorizontalBarGraph:
+
+    def __init__(self, y_data_seq, x_data_seq, y_label, x_label, title, file_name):
+        self.y_data_seq = y_data_seq
+        self.x_data_seq = x_data_seq
+        self.y_label = y_label
+        self.x_label = x_label
+        self.title = title
+        self.file_name = file_name
+
+    def draw_horizontal_bar_graph(self):
+        fig, ax = plt.subplots(figsize=(15,5))
+        plt.barh(self.y_data_seq, self.x_data_seq)
+        plt.ylabel(self.y_label)
+        plt.xlabel(self.x_label)
+        plt.xlim(0, self.x_data_seq[len(self.y_data_seq) - 1] + (0.20 * self.x_data_seq[len(self.y_data_seq) - 1]))
+        if len(self.title) > 0:
+            plt.title(self.title)
+        plt.savefig(self.file_name, transparent=True)
+
+
+
 
 #value_dict = {'C':20, 'C++':15, 'Java':30, 'Python':35}
 #bar_color = "#007700"
