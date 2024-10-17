@@ -2,6 +2,14 @@ import psycopg2
 
 
 
+def get_table_count(selection_object, query_executor, table_name):
+	count_dictionary = {}
+	cursor = query_executor.cursor(cursor_factory = psycopg2.extras.DictCursor)
+	cursor.execute(selection_object.select_entry_count(table_name))
+	result_dictionary = cursor.fetchone()
+	count = result_dictionary['count']
+	return count
+
 def get_fiscal_years(selection_object, query_executor):
 	fiscal_year_dictionary = {}
 	cursor = query_executor.cursor(cursor_factory = psycopg2.extras.DictCursor)

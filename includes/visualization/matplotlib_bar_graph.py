@@ -20,14 +20,17 @@ class BarGraphDrawer:
 
 
     def draw_bar_graph(self):
-        fig = plt.figure(figsize = (self.width, self.height))
+        #fig = plt.figure(figsize = (self.width, self.height))
         plt.bar(list(self.data_dictionary.keys()), list(self.data_dictionary.values()), color=self.bar_color, edgecolor=self.edge_color)
-        plt.xlabel(self.x_axis_label)
-        plt.ylabel(self.y_axis_label)
-        plt.title(self.title)
+        plt.xlabel(self.x_axis_label, fontsize=20)
+        plt.ylabel(self.y_axis_label, fontsize=20)
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=20)
+        plt.title(self.title, fontsize=20)
         #plt.legend()
         plt.tight_layout()
         plt.savefig(self.save_path_and_name, transparent=True)
+        plt.close()
 
 
 
@@ -59,8 +62,8 @@ class MultiDimensionalBarGraphDrawer:
             i += 1
 
         plt.xticks(x_axis, self.x_axis_label_list)
-        plt.xlabel(x_axis_label)
-        plt.ylabel(y_axis_label)
+        plt.xlabel(x_axis_label, fontsize=12)
+        plt.ylabel(y_axis_label, fontsize=12)
         plt.title(self.title)
         plt.legend()
         plt.tight_layout()
@@ -79,14 +82,18 @@ class HorizontalBarGraph:
         self.file_name = file_name
 
     def draw_horizontal_bar_graph(self):
-        fig, ax = plt.subplots(figsize=(15,5))
+        fig = plt.figure(figsize=(18,9))
         plt.barh(self.y_data_seq, self.x_data_seq)
-        plt.ylabel(self.y_label)
-        plt.xlabel(self.x_label)
+        plt.ylabel(self.y_label, fontsize=20)
+        plt.xlabel(self.x_label, fontsize=20)
+        plt.xticks(fontsize=20)
+        plt.yticks(fontsize=15, ha="left", va="center", position=(-0.35,0))
+        plt.tight_layout()
         plt.xlim(0, self.x_data_seq[len(self.y_data_seq) - 1] + (0.20 * self.x_data_seq[len(self.y_data_seq) - 1]))
         if len(self.title) > 0:
-            plt.title(self.title)
+            plt.title(self.title, fontsize=20)
         plt.savefig(self.file_name, transparent=True)
+        plt.close()
 
 
 

@@ -33,7 +33,7 @@ class SerializeDeserializeInJSON:
             output_file = Path(self.file_name)
             output_file.parent.mkdir(exist_ok=True, parents=True)
         json_data = json.dumps(self.data, cls=self.data_format_encoder_class)
-        with open(self.file_name, 'x') as file_object:
+        with open(self.file_name, 'w') as file_object:
             json.dump(json_data, file_object)
 
     def deserialize_from_json(self):

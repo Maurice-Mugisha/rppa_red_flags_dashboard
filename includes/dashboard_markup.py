@@ -202,7 +202,7 @@ class DashboardMarkup:
                  <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 20%; margin-right: 20%;">
                </td>
                <td rowspan="2"></td>
-               <td width="30%" rowspan="2" valign="top" align="left">
+               <td width="30%" rowspan="2" valign="top" align="left" style="overflow: scroll;">
                  <h4>Red flags</h4>
                 ''' + self.get_red_flag_labels() + '''
                  <hr style="height:4px; border-width:0; color:#CFCFCF; background-color:#CCCCCC; margin-left: 0%; margin-right: 20%;">
@@ -265,7 +265,7 @@ class DashboardMarkup:
             visualization_markup = '''<img src="''' + visualization_link + '''" width="100%" height="100%" />''' if is_image  == True else self.read_file(visualization_link)
 
             visualization_table += '''
-               <table border="0" cellpadding="0" cellspacing="0" width="70%" id="''' + red_flag_id + '''_visualiztion" class="red_flags" style="display: none;">
+               <table border="0" cellpadding="0" cellspacing="0" id="''' + red_flag_id + '''_visualiztion" class="red_flags" style="display: none;">
                <tr>
                  <td valign="middle" align="center">''' + visualization_markup + '''</td>
                </tr>

@@ -8,6 +8,10 @@ class Select:
 	def  __str__(self):
 		return self.instance_name
 
+	def select_entry_count(self, table_name):
+		query = "SELECT COUNT(*) AS count FROM " + table_name + ";"
+		return query
+
 	def select_fiscal_year(self):
 		query = "SELECT DISTINCT(ext_fiscal_year) AS fiscal_year FROM planning ORDER BY ext_fiscal_year DESC;"
 		return query

@@ -98,11 +98,12 @@ class NonImageVisualizationMarkup:
         red_flag_markup = '''<br />'''
         red_flag_markup += '''<table border="0" cellpadding="0" cellspacing="0" width="100%" height="100%" style="font-size:10px;">'''
         red_flag_markup += '''<tr>'''
-        red_flag_markup += '''<td colspan="''' + str(len(table_list_of_lists_data[0])) + '''" align="center" valign="middle">''' + table_title + '''</td>'''
+        red_flag_markup += '''<td colspan="''' + str(len(table_list_of_lists_data[0]) + 1) + '''" align="center" valign="middle" style="background:#9F9F9F;padding:10px; font-size:14px;">''' + table_title + '''</td>'''
         red_flag_markup += '''</tr>'''
         row_number = 1
         for entry_list in table_list_of_lists_data:
             red_flag_markup += '''<tr>'''
+            red_flag_markup += '''<td>''' + str(row_number) + '''</td>'''
             for item in entry_list:
                 red_flag_markup += '''<td>''' + str(item) + '''</td>'''
             red_flag_markup += '''</tr>'''
